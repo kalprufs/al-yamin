@@ -141,6 +141,32 @@
             border-bottom: 3px solid #667eea;
         }
         
+        .class-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .class-selector label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .class-selector select {
+            padding: 10px 15px;
+            border: 2px solid #e3f2fd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            min-width: 200px;
+        }
+        
         .form-group {
             margin-bottom: 20px;
         }
@@ -232,11 +258,22 @@
             box-shadow: 0 12px 30px rgba(23, 162, 184, 0.4);
         }
         
-        .sessions-list, .students-list {
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: white;
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 193, 7, 0.4);
+        }
+        
+        .sessions-list, .students-list, .classes-list {
             margin-top: 25px;
         }
         
-        .session-item, .student-item {
+        .session-item, .student-item, .class-item {
             background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9));
             padding: 20px;
             margin: 15px 0;
@@ -246,12 +283,12 @@
             border-right: 4px solid #667eea;
         }
         
-        .session-item:hover, .student-item:hover {
+        .session-item:hover, .student-item:hover, .class-item:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 35px rgba(0,0,0,0.15);
         }
         
-        .session-header, .student-header {
+        .session-header, .student-header, .class-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -260,19 +297,19 @@
             gap: 10px;
         }
         
-        .session-title, .student-name {
+        .session-title, .student-name, .class-name {
             font-size: 18px;
             font-weight: 700;
             color: #2c3e50;
         }
         
-        .session-item p, .student-item p {
+        .session-item p, .student-item p, .class-item p {
             color: #5a6c7d;
             line-height: 1.6;
             margin: 6px 0;
         }
         
-        .session-item p strong, .student-item p strong {
+        .session-item p strong, .student-item p strong, .class-item p strong {
             color: #2c3e50;
             font-weight: 600;
         }
@@ -492,6 +529,39 @@
             margin-bottom: 18px;
         }
         
+        .json-section {
+            margin: 25px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9));
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .json-section h3 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 18px;
+        }
+        
+        .json-section textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e3f2fd;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .json-section .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -555,6 +625,35 @@
             margin-bottom: 12px;
         }
         
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #17a2b8, #6f42c1);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 6px;
+        }
+        
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(23, 162, 184, 0.4);
+        }
+        
+        .json-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -606,7 +705,7 @@
                 padding: 25px 18px;
             }
             
-            .session-header, .student-header {
+            .session-header, .student-header, .class-header {
                 flex-direction: column;
                 align-items: flex-start;
             }
@@ -616,6 +715,24 @@
                 font-size: 13px;
                 margin: 4px;
             }
+            
+            .class-selector {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .class-selector select {
+                min-width: 100%;
+            }
+            
+            .json-section .btn-group {
+                flex-direction: column;
+            }
+            
+            .json-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -623,19 +740,54 @@
     <div class="container">
         <div class="header">
             <h1>استادیار</h1>
-            <p>مدیریت کامل جلسات، دانشجویان و امتیازدهی</p>
+            <p>مدیریت کامل کلاس‌ها، جلسات، دانشجویان و امتیازدهی</p>
         </div>
         
         <div class="main-content">
             <div class="tabs">
+                <button class="tab" onclick="showTab('classes')">کلاس‌ها</button>
                 <button class="tab active" onclick="showTab('sessions')">جلسات</button>
                 <button class="tab" onclick="showTab('students')">دانشجویان</button>
                 <button class="tab" onclick="showTab('attendance')">حضور و غیاب</button>
                 <button class="tab" onclick="showTab('reports')">گزارشات</button>
             </div>
             
+            <div id="classes" class="tab-content">
+                <h2>مدیریت کلاس‌ها</h2>
+                <form id="classForm">
+                    <div class="form-group">
+                        <label>نام کلاس:</label>
+                        <input type="text" id="className" required>
+                    </div>
+                    <div class="form-group">
+                        <label>توضیحات:</label>
+                        <textarea id="classDescription" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">افزودن کلاس</button>
+                </form>
+                
+                <div class="classes-list" id="classesList"></div>
+                
+                <!-- بخش وارد کردن JSON -->
+                <div class="json-section">
+                    <h3>مدیریت داده‌ها</h3>
+                    <p style="margin-bottom: 15px; color: #666;">می‌توانید اطلاعات را وارد یا خارج کنید:</p>
+                    
+                    <div class="json-buttons">
+                        <button onclick="openImportModal()" class="btn btn-info">وارد کردن اطلاعات از JSON</button>
+                        <button onclick="resetData()" class="btn btn-danger">بازنشانی همه اطلاعات</button>
+                    </div>
+                </div>
+            </div>
+            
             <div id="sessions" class="tab-content active">
                 <h2>مدیریت جلسات</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="sessionClass" onchange="renderSessions()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
                 <form id="sessionForm">
                     <div class="form-group">
                         <label>عنوان جلسه:</label>
@@ -657,6 +809,12 @@
             
             <div id="students" class="tab-content">
                 <h2>مدیریت دانشجویان</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="studentClass" onchange="renderStudents()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
                 <form id="studentForm">
                     <div class="form-group">
                         <label>نام دانشجو:</label>
@@ -686,24 +844,48 @@
             
             <div id="attendance" class="tab-content">
                 <h2>حضور و غیاب</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="attendanceClass" onchange="renderAttendance()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
                 <div id="attendanceContent"></div>
             </div>
             
             <div id="reports" class="tab-content">
                 <h2>گزارشات و آمار</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="reportClass" onchange="renderStats()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
                 <div class="stats-grid" id="statsGrid"></div>
+                
                 <div class="export-section">
                     <h3>خروجی داده‌ها</h3>
                     <p style="margin-bottom: 18px; color: #666;">تمام اطلاعات را در قالب فایل Excel دریافت کنید</p>
                     <button onclick="exportToExcel()" class="btn btn-success">دانلود فایل Excel</button>
                 </div>
+                
+                <!-- بخش خروجی JSON -->
+                <div class="json-section">
+                    <h3>خروجی گرفتن اطلاعات</h3>
+                    <p style="margin-bottom: 15px; color: #666;">می‌توانید تمام اطلاعات را به صورت JSON ذخیره کنید:</p>
+                    
+                    <div class="json-buttons">
+                        <button onclick="openExportModal()" class="btn btn-warning">خروجی JSON</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
+    <!-- مودال جزئیات دانشجو -->
     <div id="studentModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
+            <span class="close" onclick="closeModal('studentModal')">&times;</span>
             <h2>جزئیات دانشجو</h2>
             <form id="studentDetailsForm">
                 <input type="hidden" id="modalStudentId">
@@ -799,6 +981,58 @@
             </form>
         </div>
     </div>
+    
+    <!-- مودال خروجی JSON -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('exportModal')">&times;</span>
+            <h2>خروجی گرفتن اطلاعات به صورت JSON</h2>
+            
+            <div class="form-group">
+                <label>اطلاعات JSON:</label>
+                <textarea id="jsonOutput" readonly style="min-height: 300px;"></textarea>
+            </div>
+            
+            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="exportToJSON()" class="btn btn-warning">دانلود فایل JSON</button>
+                <button onclick="copyJSON()" class="btn btn-info">کپی JSON</button>
+                <button onclick="closeModal('exportModal')" class="btn btn-danger">بستن</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- مودال وارد کردن JSON -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('importModal')">&times;</span>
+            <h2>وارد کردن اطلاعات از JSON</h2>
+            
+            <div class="form-group">
+                <label>انتخاب فایل JSON:</label>
+                <input type="file" id="jsonFileInput" class="file-input" accept=".json">
+                <label for="jsonFileInput" class="file-label">انتخاب فایل JSON</label>
+                <span id="fileName" style="margin-right: 10px; color: #666;">هیچ فایلی انتخاب نشده</span>
+            </div>
+            
+            <div class="form-group">
+                <label>یا مستقیماً JSON را در کادر زیر وارد کنید:</label>
+                <textarea id="jsonInput" placeholder='{"classes": [], "sessions": [], "students": [], "attendance": {}, "studentDetails": {}}' style="min-height: 250px;"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>نوع عملیات:</label>
+                <select id="importType" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
+                    <option value="replace">جایگزینی کامل اطلاعات فعلی</option>
+                    <option value="merge">ادغام با اطلاعات فعلی</option>
+                </select>
+            </div>
+            
+            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="importFromJSON()" class="btn btn-success">وارد کردن اطلاعات</button>
+                <button onclick="closeModal('importModal')" class="btn btn-danger">انصراف</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         let scoreConfig = {
@@ -817,14 +1051,18 @@
             shortBook: 3
         };
 
+        let classes = [];
         let sessions = [];
         let students = [];
         let attendance = {};
         let studentDetails = {};
         let currentSessionId = null;
+        let currentClassId = null;
         
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
+            renderClasses();
+            renderClassSelectors();
             renderSessions();
             renderStudents();
             renderAttendance();
@@ -834,6 +1072,11 @@
             const persianToday = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
             document.getElementById('sessionDate').value = `${persianToday[0]}/${String(persianToday[1]).padStart(2, '0')}/${String(persianToday[2]).padStart(2, '0')}`;
             
+            document.getElementById('classForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addClass();
+            });
+            
             document.getElementById('sessionForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 addSession();
@@ -842,6 +1085,25 @@
             document.getElementById('studentForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 addStudent();
+            });
+            
+            // مدیریت انتخاب فایل JSON
+            document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('fileName').textContent = file.name;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const jsonData = JSON.parse(e.target.result);
+                            document.getElementById('jsonInput').value = JSON.stringify(jsonData, null, 2);
+                        } catch (error) {
+                            alert('خطا در خواندن فایل JSON: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
             });
         });
         
@@ -864,13 +1126,124 @@
             }
         }
         
+        function openExportModal() {
+            updateJSONOutput();
+            document.getElementById('exportModal').style.display = 'block';
+        }
+        
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function addClass() {
+            const name = document.getElementById('className').value;
+            const description = document.getElementById('classDescription').value;
+            
+            const newClass = {
+                id: Date.now(),
+                name,
+                description
+            };
+            
+            classes.push(newClass);
+            saveData();
+            renderClasses();
+            renderClassSelectors();
+            
+            document.getElementById('classForm').reset();
+        }
+        
+        function renderClasses() {
+            const classesList = document.getElementById('classesList');
+            
+            if (classes.length === 0) {
+                classesList.innerHTML = '<div class="empty-state">هنوز کلاسی اضافه نشده است</div>';
+                return;
+            }
+            
+            classesList.innerHTML = classes.map(cls => `
+                <div class="class-item">
+                    <div class="class-header">
+                        <div class="class-name">${cls.name}</div>
+                        <div>
+                            <button onclick="deleteClass(${cls.id})" class="btn btn-danger">حذف</button>
+                        </div>
+                    </div>
+                    <p><strong>توضیحات:</strong> ${cls.description}</p>
+                </div>
+            `).join('');
+        }
+        
+        function deleteClass(id) {
+            if (confirm('آیا از حذف این کلاس اطمینان دارید؟ تمام جلسات و دانشجویان این کلاس نیز حذف خواهند شد.')) {
+                // Remove the class
+                classes = classes.filter(cls => cls.id !== id);
+                
+                // Remove sessions for this class
+                sessions = sessions.filter(session => session.classId !== id);
+                
+                // Remove students for this class
+                students = students.filter(student => student.classId !== id);
+                
+                // Remove attendance records for this class
+                Object.keys(attendance).forEach(sessionId => {
+                    const session = sessions.find(s => s.id == sessionId);
+                    if (!session || session.classId === id) {
+                        delete attendance[sessionId];
+                    }
+                });
+                
+                // Remove student details for students in this class
+                Object.keys(studentDetails).forEach(studentId => {
+                    const student = students.find(s => s.id == studentId);
+                    if (!student || student.classId === id) {
+                        delete studentDetails[studentId];
+                    }
+                });
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                renderSessions();
+                renderStudents();
+                renderAttendance();
+                renderStats();
+            }
+        }
+        
+        function renderClassSelectors() {
+            const classSelectors = [
+                'sessionClass',
+                'studentClass',
+                'attendanceClass',
+                'reportClass'
+            ];
+            
+            classSelectors.forEach(selectorId => {
+                const selector = document.getElementById(selectorId);
+                selector.innerHTML = '<option value="">-- انتخاب کنید --</option>' + 
+                    classes.map(cls => `<option value="${cls.id}">${cls.name}</option>`).join('');
+            });
+        }
+        
         function addSession() {
+            const classId = document.getElementById('sessionClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
             const title = document.getElementById('sessionTitle').value;
             const date = document.getElementById('sessionDate').value;
             const description = document.getElementById('sessionDescription').value;
             
             const session = {
                 id: Date.now(),
+                classId: parseInt(classId),
                 title,
                 date,
                 description
@@ -888,14 +1261,23 @@
         }
         
         function renderSessions() {
+            const classId = document.getElementById('sessionClass').value;
+            currentClassId = classId;
             const sessionsList = document.getElementById('sessionsList');
             
-            if (sessions.length === 0) {
-                sessionsList.innerHTML = '<div class="empty-state">هنوز جلسه‌ای اضافه نشده است</div>';
+            if (!classId) {
+                sessionsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
                 return;
             }
             
-            sessionsList.innerHTML = sessions.map(session => `
+            const classSessions = sessions.filter(session => session.classId == classId);
+            
+            if (classSessions.length === 0) {
+                sessionsList.innerHTML = '<div class="empty-state">هنوز جلسه‌ای برای این کلاس اضافه نشده است</div>';
+                return;
+            }
+            
+            sessionsList.innerHTML = classSessions.map(session => `
                 <div class="session-item">
                     <div class="session-header">
                         <div class="session-title">${session.title}</div>
@@ -931,19 +1313,26 @@
         function openSessionScoring(sessionId) {
             currentSessionId = sessionId;
             showTab('attendance');
-            const sessionSelect = document.getElementById('attendanceSession');
-            if (sessionSelect) {
-                sessionSelect.value = sessionId;
-                renderAttendanceList();
+            const session = sessions.find(s => s.id == sessionId);
+            if (session) {
+                document.getElementById('attendanceClass').value = session.classId;
+                renderAttendance();
             }
         }
         
         function addStudent() {
+            const classId = document.getElementById('studentClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
             const name = document.getElementById('studentName').value;
             const notes = document.getElementById('studentNotes').value;
             
             const student = {
                 id: Date.now(),
+                classId: parseInt(classId),
                 name,
                 notes
             };
@@ -965,6 +1354,12 @@
         }
         
         function addBulkStudents() {
+            const classId = document.getElementById('studentClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
             const namesText = document.getElementById('bulkStudentNames').value;
             if (!namesText.trim()) {
                 alert('لطفاً نام دانشجویان را وارد کنید');
@@ -976,6 +1371,7 @@
             names.forEach(name => {
                 const student = {
                     id: Date.now() + Math.random(),
+                    classId: parseInt(classId),
                     name: name.trim(),
                     notes: ''
                 };
@@ -991,14 +1387,23 @@
         }
         
         function renderStudents() {
+            const classId = document.getElementById('studentClass').value;
+            currentClassId = classId;
             const studentsList = document.getElementById('studentsList');
             
-            if (students.length === 0) {
-                studentsList.innerHTML = '<div class="empty-state">هنوز دانشجویی اضافه نشده است</div>';
+            if (!classId) {
+                studentsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
                 return;
             }
             
-            studentsList.innerHTML = students.map(student => {
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classStudents.length === 0) {
+                studentsList.innerHTML = '<div class="empty-state">هنوز دانشجویی برای این کلاس اضافه نشده است</div>';
+                return;
+            }
+            
+            studentsList.innerHTML = classStudents.map(student => {
                 const totalScore = calculateStudentScore(student.id);
                 
                 return `
@@ -1036,22 +1441,49 @@
         }
         
         function deleteAllStudents() {
-            if (students.length === 0) {
+            const classId = document.getElementById('studentClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classStudents.length === 0) {
                 alert('هیچ دانشجویی برای حذف وجود ندارد');
                 return;
             }
             
-            const confirmation = confirm(`⚠️ هشدار!\n\nآیا از حذف تمام ${students.length} دانشجو اطمینان دارید؟\n\nتمام اطلاعات دانشجویان شامل امتیازات، حضور و غیاب و جزئیات آنها پاک خواهد شد.\n\nاین عملیات قابل بازگشت نیست!`);
+            const confirmation = confirm(`⚠️ هشدار!\n\nآیا از حذف تمام ${classStudents.length} دانشجو در این کلاس اطمینان دارید؟\n\nتمام اطلاعات دانشجویان شامل امتیازات، حضور و غیاب و جزئیات آنها پاک خواهد شد.\n\nاین عملیات قابل بازگشت نیست!`);
             
             if (confirmation) {
                 const secondConfirmation = confirm('آیا واقعاً مطمئن هستید؟\n\nاین آخرین فرصت برای انصراف است.');
                 
                 if (secondConfirmation) {
-                    students = [];
-                    studentDetails = {};
+                    // Remove students for this class
+                    students = students.filter(student => student.classId != classId);
                     
+                    // Remove student details for students in this class
+                    Object.keys(studentDetails).forEach(studentId => {
+                        const student = students.find(s => s.id == studentId);
+                        if (!student) {
+                            delete studentDetails[studentId];
+                        }
+                    });
+                    
+                    // Remove attendance records for students in this class
                     Object.keys(attendance).forEach(sessionId => {
-                        attendance[sessionId] = {};
+                        const session = sessions.find(s => s.id == sessionId);
+                        if (session && session.classId == classId) {
+                            delete attendance[sessionId];
+                        } else {
+                            Object.keys(attendance[sessionId]).forEach(studentId => {
+                                const student = students.find(s => s.id == studentId);
+                                if (!student) {
+                                    delete attendance[sessionId][studentId];
+                                }
+                            });
+                        }
                     });
                     
                     saveData();
@@ -1059,7 +1491,7 @@
                     renderAttendance();
                     renderStats();
                     
-                    alert('✓ تمام دانشجویان با موفقیت حذف شدند');
+                    alert('✓ تمام دانشجویان این کلاس با موفقیت حذف شدند');
                 }
             }
         }
@@ -1551,24 +1983,31 @@
             renderStudents();
             renderAttendanceList();
             renderStats();
-            closeModal();
+            closeModal('studentModal');
             alert('اطلاعات با موفقیت ذخیره شد');
         }
         
-        function closeModal() {
-            document.getElementById('studentModal').style.display = 'none';
-        }
-        
         function renderAttendance() {
+            const classId = document.getElementById('attendanceClass').value;
+            currentClassId = classId;
             const attendanceContent = document.getElementById('attendanceContent');
             
-            if (sessions.length === 0) {
-                attendanceContent.innerHTML = '<div class="empty-state">ابتدا جلسه‌ای ایجاد کنید</div>';
+            if (!classId) {
+                attendanceContent.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
                 return;
             }
             
-            if (students.length === 0) {
-                attendanceContent.innerHTML = '<div class="empty-state">ابتدا دانشجویی اضافه کنید</div>';
+            const classSessions = sessions.filter(session => session.classId == classId);
+            
+            if (classSessions.length === 0) {
+                attendanceContent.innerHTML = '<div class="empty-state">ابتدا جلسه‌ای برای این کلاس ایجاد کنید</div>';
+                return;
+            }
+            
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classStudents.length === 0) {
+                attendanceContent.innerHTML = '<div class="empty-state">ابتدا دانشجویی برای این کلاس اضافه کنید</div>';
                 return;
             }
             
@@ -1576,7 +2015,7 @@
                 <div class="form-group">
                     <label>انتخاب جلسه:</label>
                     <select id="attendanceSession" onchange="renderAttendanceList()">
-                        ${sessions.map(session => `<option value="${session.id}" ${currentSessionId == session.id ? 'selected' : ''}>${session.title} (${session.date})</option>`).join('')}
+                        ${classSessions.map(session => `<option value="${session.id}" ${currentSessionId == session.id ? 'selected' : ''}>${session.title} (${session.date})</option>`).join('')}
                     </select>
                 </div>
                 <div id="attendanceListContainer"></div>
@@ -1595,11 +2034,13 @@
                 attendance[sessionId] = {};
             }
             
+            const classStudents = students.filter(student => student.classId == currentClassId);
+            
             let html = `
                 <h3 style="margin: 20px 0;">ثبت حضور و غیاب</h3>
                 <p style="margin-bottom: 15px; color: #666;">تیک بزنید برای دانشجویانی که <strong>حاضر</strong> هستند (پیش‌فرض همه غایب هستند)</p>
                 <div class="attendance-list">
-                    ${students.map(student => {
+                    ${classStudents.map(student => {
                         const isPresent = attendance[sessionId][student.id] === true;
                         return `
                             <div class="attendance-item">
@@ -1757,16 +2198,26 @@
         }
         
         function renderStats() {
+            const classId = document.getElementById('reportClass').value;
+            currentClassId = classId;
             const statsGrid = document.getElementById('statsGrid');
             
-            const totalSessions = sessions.length;
-            const totalStudents = students.length;
+            if (!classId) {
+                statsGrid.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            const totalSessions = classSessions.length;
+            const totalStudents = classStudents.length;
             
             let totalAttendance = 0;
             let totalPossibleAttendance = 0;
             
-            sessions.forEach(session => {
-                students.forEach(student => {
+            classSessions.forEach(session => {
+                classStudents.forEach(student => {
                     totalPossibleAttendance++;
                     if (attendance[session.id] && attendance[session.id][student.id] === true) {
                         totalAttendance++;
@@ -1780,7 +2231,7 @@
             let totalScore = 0;
             let highestScore = 0;
             
-            students.forEach(student => {
+            classStudents.forEach(student => {
                 const score = calculateStudentScore(student.id);
                 totalScore += score;
                 if (score > highestScore) {
@@ -1788,7 +2239,7 @@
                 }
             });
             
-            const avgScore = students.length > 0 ? (totalScore / students.length) : 0;
+            const avgScore = classStudents.length > 0 ? (totalScore / classStudents.length) : 0;
             
             statsGrid.innerHTML = `
                 <div class="stat-card">
@@ -1815,14 +2266,25 @@
         }
         
         function exportToExcel() {
-            if (students.length === 0) {
+            const classId = document.getElementById('reportClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classStudents.length === 0) {
                 alert('هیچ دانشجویی برای خروجی وجود ندارد');
                 return;
             }
             
+            const currentClass = classes.find(cls => cls.id == classId);
+            const className = currentClass ? currentClass.name : 'کلاس';
+            
             const wb = XLSX.utils.book_new();
             
-            const studentData = students.map(student => {
+            const studentData = classStudents.map(student => {
                 const studentDetail = studentDetails[student.id] || {};
                 const totalScore = calculateStudentScore(student.id);
                 
@@ -1900,16 +2362,18 @@
             const ws = XLSX.utils.json_to_sheet(studentData);
             XLSX.utils.book_append_sheet(wb, ws, 'دانشجویان');
             
-            if (sessions.length > 0) {
+            const classSessions = sessions.filter(session => session.classId == classId);
+            
+            if (classSessions.length > 0) {
                 const attendanceData = [];
                 
-                students.forEach(student => {
+                classStudents.forEach(student => {
                     const row = { 
                         'نام دانشجو': student.name,
                         'کد دانشجویی': (studentDetails[student.id] || {}).studentCode || ''
                     };
                     
-                    sessions.forEach(session => {
+                    classSessions.forEach(session => {
                         const isPresent = attendance[session.id] && attendance[session.id][student.id] === true;
                         row[session.title] = isPresent ? 'حاضر' : 'غایب';
                     });
@@ -1921,11 +2385,131 @@
                 XLSX.utils.book_append_sheet(wb, ws2, 'حضور و غیاب');
             }
             
-            XLSX.writeFile(wb, 'استادیار_گزارش.xlsx');
+            XLSX.writeFile(wb, `استادیار_گزارش_${className}.xlsx`);
+        }
+        
+        // توابع جدید برای مدیریت JSON
+        function updateJSONOutput() {
+            const data = {
+                classes,
+                sessions,
+                students,
+                attendance,
+                studentDetails,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            document.getElementById('jsonOutput').value = JSON.stringify(data, null, 2);
+        }
+        
+        function exportToJSON() {
+            const data = {
+                classes,
+                sessions,
+                students,
+                attendance,
+                studentDetails,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `استادیار_پشتیبان_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+        
+        function copyJSON() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.select();
+            document.execCommand('copy');
+            alert('JSON با موفقیت کپی شد');
+        }
+        
+        function importFromJSON() {
+            const jsonInput = document.getElementById('jsonInput').value;
+            const importType = document.getElementById('importType').value;
+            
+            if (!jsonInput.trim()) {
+                alert('لطفاً JSON را وارد کنید یا فایل انتخاب کنید');
+                return;
+            }
+            
+            try {
+                const importedData = JSON.parse(jsonInput);
+                
+                // اعتبارسنجی ساختار داده
+                if (!importedData.classes || !importedData.sessions || !importedData.students || !importedData.attendance || !importedData.studentDetails) {
+                    throw new Error('ساختار JSON نامعتبر است');
+                }
+                
+                if (importType === 'replace') {
+                    // جایگزینی کامل اطلاعات
+                    classes = importedData.classes;
+                    sessions = importedData.sessions;
+                    students = importedData.students;
+                    attendance = importedData.attendance;
+                    studentDetails = importedData.studentDetails;
+                } else {
+                    // ادغام اطلاعات
+                    classes = [...classes, ...importedData.classes];
+                    sessions = [...sessions, ...importedData.sessions];
+                    students = [...students, ...importedData.students];
+                    
+                    // ادغام attendance
+                    Object.keys(importedData.attendance).forEach(sessionId => {
+                        if (!attendance[sessionId]) {
+                            attendance[sessionId] = {};
+                        }
+                        Object.assign(attendance[sessionId], importedData.attendance[sessionId]);
+                    });
+                    
+                    // ادغام studentDetails
+                    Object.assign(studentDetails, importedData.studentDetails);
+                }
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                renderSessions();
+                renderStudents();
+                renderAttendance();
+                renderStats();
+                
+                closeModal('importModal');
+                alert('اطلاعات با موفقیت وارد شد');
+            } catch (error) {
+                alert('خطا در وارد کردن JSON: ' + error.message);
+            }
+        }
+        
+        function resetData() {
+            if (confirm('⚠️ هشدار!\n\nآیا از بازنشانی کامل همه اطلاعات اطمینان دارید؟\n\nتمام کلاس‌ها، جلسات، دانشجویان و اطلاعات مرتبط پاک خواهد شد.\n\nاین عملیات قابل بازگشت نیست!')) {
+                classes = [];
+                sessions = [];
+                students = [];
+                attendance = {};
+                studentDetails = {};
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                renderSessions();
+                renderStudents();
+                renderAttendance();
+                renderStats();
+                
+                alert('✓ همه اطلاعات با موفقیت بازنشانی شدند');
+            }
         }
         
         function saveData() {
             const data = {
+                classes,
                 sessions,
                 students,
                 attendance,
@@ -1939,6 +2523,7 @@
             const data = JSON.parse(localStorage.getItem('استادیار'));
             
             if (data) {
+                classes = data.classes || [];
                 sessions = data.sessions || [];
                 students = data.students || [];
                 attendance = data.attendance || {};
