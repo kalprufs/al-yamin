@@ -2069,33 +2069,7 @@
             }
             
             attendance[sessionId][studentId] = isPresent;
-            
-            if (!studentDetails[studentId]) {
-                studentDetails[studentId] = {
-                    books: [],
-                    movies: [],
-                    series: [],
-                    studentCode: '',
-                    city: '',
-                    major: '',
-                    minor: '',
-                    isMarried: false,
-                    hasChild: false,
-                    hasJob: false,
-                    hasAchievement: false,
-                    sessionScores: {}
-                };
-            }
-            
-            if (!studentDetails[studentId].sessionScores[sessionId]) {
-                studentDetails[studentId].sessionScores[sessionId] = {};
-            }
-            
-            if (!isPresent) {
-                studentDetails[studentId].sessionScores[sessionId].absentPoints = scoreConfig.absent;
-            } else {
-                studentDetails[studentId].sessionScores[sessionId].absentPoints = 0;
-            }
+            saveData();
             
             const badge = document.querySelector(`#attendance_${studentId}`).parentElement.querySelector('.score-badge');
             if (badge) {
@@ -2110,12 +2084,26 @@
             alert('حضور و غیاب با موفقیت ذخیره شد و امتیازات به‌روز شدند');
         }
         
+        // 🔥 تابع محاسبه امتیاز دانشجو - نسخه اصلاحی
         function calculateStudentScore(studentId) {
             let totalScore = 0;
-            const studentDetail = studentDetails[studentId];
+            const student = students.find(s => s.id === studentId);
+            if (!student) return 0;
             
-            if (!studentDetail) return totalScore;
+            const studentDetail = studentDetails[studentId] || {};
             
+            // 🔥 محاسبه امتیاز غیبت برای تمام جلسات کلاس (بدون توجه به تاریخ ثبت‌نام)
+            const allClassSessions = sessions.filter(s => s.classId === student.classId);
+            allClassSessions.forEach(session => {
+                if (attendance[session.id] && attendance[session.id][studentId] === true) {
+                    // حاضر - امتیاز تغییر نمیکند
+                } else {
+                    // غایب - امتیاز منفی
+                    totalScore += scoreConfig.absent; // -1
+                }
+            });
+            
+            // امتیازات مثبت (کتاب، فیلم، وضعیت شخصی، etc.)
             if (studentDetail.isMarried) {
                 totalScore += studentDetail.isMarriedPoints || scoreConfig.isMarried;
             }
@@ -2156,14 +2144,12 @@
                 });
             }
             
+            // امتیازات جلسه‌ای (مثبت)
             if (studentDetail.sessionScores) {
                 Object.keys(studentDetail.sessionScores).forEach(sessionId => {
                     const sessionScore = studentDetail.sessionScores[sessionId];
                     
-                    if (sessionScore.absentPoints !== undefined) {
-                        totalScore += sessionScore.absentPoints || 0;
-                    }
-                    
+                    // فقط امتیازات مثبت جلسه‌ای حساب شود (غیبت قبلاً حساب شد)
                     if (sessionScore.noClassNotes) {
                         totalScore += sessionScore.noClassNotesPoints || scoreConfig.noClassNotes;
                     }
@@ -2197,6 +2183,7 @@
             return totalScore;
         }
         
+        // 🔥 تابع آمار و گزارشات - نسخه اصلاحی
         function renderStats() {
             const classId = document.getElementById('reportClass').value;
             currentClassId = classId;
@@ -2213,12 +2200,12 @@
             const totalSessions = classSessions.length;
             const totalStudents = classStudents.length;
             
+            // 🔥 محاسبه جدید میانگین حضور
+            let totalPossibleAttendance = totalSessions * totalStudents;
             let totalAttendance = 0;
-            let totalPossibleAttendance = 0;
             
             classSessions.forEach(session => {
                 classStudents.forEach(student => {
-                    totalPossibleAttendance++;
                     if (attendance[session.id] && attendance[session.id][student.id] === true) {
                         totalAttendance++;
                     }
@@ -2228,15 +2215,16 @@
             const avgAttendance = totalPossibleAttendance > 0 ? 
                 ((totalAttendance / totalPossibleAttendance) * 100) : 0;
             
+            // محاسبه امتیازات
             let totalScore = 0;
-            let highestScore = 0;
+            let highestScore = -Infinity;
+            let lowestScore = Infinity;
             
             classStudents.forEach(student => {
                 const score = calculateStudentScore(student.id);
                 totalScore += score;
-                if (score > highestScore) {
-                    highestScore = score;
-                }
+                if (score > highestScore) highestScore = score;
+                if (score < lowestScore) lowestScore = score;
             });
             
             const avgScore = classStudents.length > 0 ? (totalScore / classStudents.length) : 0;
@@ -2261,6 +2249,10 @@
                 <div class="stat-card">
                     <div class="stat-number">${highestScore.toFixed(2)}</div>
                     <div class="stat-label">بالاترین امتیاز</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${lowestScore.toFixed(2)}</div>
+                    <div class="stat-label">پایین‌ترین امتیاز</div>
                 </div>
             `;
         }
@@ -2319,7 +2311,6 @@
                 if (studentDetail.sessionScores) {
                     Object.keys(studentDetail.sessionScores).forEach(sessionId => {
                         const ss = studentDetail.sessionScores[sessionId];
-                        if (ss.absentPoints !== undefined) sessionScoresTotal += ss.absentPoints || 0;
                         if (ss.noClassNotes) sessionScoresTotal += ss.noClassNotesPoints || scoreConfig.noClassNotes;
                         if (ss.noHomework) sessionScoresTotal += ss.noHomeworkPoints || scoreConfig.noHomework;
                         if (ss.writesNotes) sessionScoresTotal += ss.writesNotesPoints || scoreConfig.writesNotes;
@@ -2335,6 +2326,15 @@
                         }
                     });
                 }
+                
+                // محاسبه امتیاز غیبت
+                const allClassSessions = sessions.filter(s => s.classId === student.classId);
+                let absenceScore = 0;
+                allClassSessions.forEach(session => {
+                    if (!attendance[session.id] || attendance[session.id][student.id] !== true) {
+                        absenceScore += scoreConfig.absent;
+                    }
+                });
                 
                 return {
                     'نام دانشجو': student.name,
@@ -2355,6 +2355,7 @@
                     'سریال‌ها': (studentDetail.series || []).map(s => s.name).filter(n => n.trim()).join(', '),
                     'امتیاز سریال‌ها': seriesScore,
                     'امتیاز جلسات': sessionScoresTotal,
+                    'امتیاز غیبت': absenceScore,
                     'امتیاز کل': totalScore
                 };
             });
