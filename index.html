@@ -6,6 +6,7 @@
     <title>استادیار - سیستم مدیریت حضور و غیاب کلاس</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* تمام استایل‌ها مانند قبل باقی می‌مانند */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
         
         * {
@@ -1049,6 +1050,13 @@
             </div>
             
             <div class="form-group">
+                <label>کلاس مقصد:</label>
+                <select id="excelTargetClass" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
+                    <option value="">-- انتخاب کلاس --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
                 <label>نوع عملیات:</label>
                 <select id="excelImportType" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
                     <option value="replace">جایگزینی کامل اطلاعات فعلی</option>
@@ -1222,6 +1230,13 @@
             document.getElementById('excelImportPreview').style.display = 'none';
             document.getElementById('excelFileInput').value = '';
             document.getElementById('excelFileName').textContent = 'هیچ فایلی انتخاب نشده';
+            
+            // پر کردن لیست کلاس‌ها برای انتخاب
+            const classSelect = document.getElementById('excelTargetClass');
+            classSelect.innerHTML = '<option value="">-- انتخاب کلاس --</option>';
+            classes.forEach(cls => {
+                classSelect.innerHTML += `<option value="${cls.id}">${cls.name}</option>`;
+            });
         }
         
         function closeModal(modalId) {
@@ -2653,10 +2668,16 @@
         // Main Excel import function - CORRECTED VERSION
         function importFromExcel() {
             const fileInput = document.getElementById('excelFileInput');
+            const targetClassId = document.getElementById('excelTargetClass').value;
             const importType = document.getElementById('excelImportType').value;
             
             if (!fileInput.files[0]) {
                 alert('لطفاً یک فایل Excel انتخاب کنید');
+                return;
+            }
+            
+            if (!targetClassId) {
+                alert('لطفاً یک کلاس برای وارد کردن اطلاعات انتخاب کنید');
                 return;
             }
             
@@ -2669,25 +2690,26 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     
                     if (importType === 'replace') {
-                        // Reset all data
-                        classes = [];
-                        sessions = [];
-                        students = [];
-                        attendance = {};
-                        studentDetails = {};
+                        // فقط دانشجویان و جلسات این کلاس را حذف می‌کنیم
+                        students = students.filter(student => student.classId != targetClassId);
+                        sessions = sessions.filter(session => session.classId != targetClassId);
+                        
+                        // حذف رکوردهای حضور و غیاب مربوط به این کلاس
+                        Object.keys(attendance).forEach(sessionId => {
+                            const session = sessions.find(s => s.id == sessionId);
+                            if (!session || session.classId == targetClassId) {
+                                delete attendance[sessionId];
+                            }
+                        });
+                        
+                        // حذف جزئیات دانشجویان این کلاس
+                        Object.keys(studentDetails).forEach(studentId => {
+                            const student = students.find(s => s.id == studentId);
+                            if (!student || student.classId == targetClassId) {
+                                delete studentDetails[studentId];
+                            }
+                        });
                     }
-                    
-                    // Create a default class if none exists
-                    if (classes.length === 0) {
-                        const defaultClass = {
-                            id: Date.now(),
-                            name: 'کلاس وارد شده از اکسل',
-                            description: 'این کلاس از طریق فایل Excel وارد شده است'
-                        };
-                        classes.push(defaultClass);
-                    }
-                    
-                    const targetClassId = classes[0].id; // Use first available class
                     
                     // Process students sheet
                     if (workbook.Sheets['دانشجویان']) {
@@ -2707,7 +2729,7 @@
                                 // Create new student in replace mode
                                 student = {
                                     id: Date.now() + index,
-                                    classId: targetClassId,
+                                    classId: parseInt(targetClassId),
                                     name: storageName,
                                     notes: excelStudent['توضیحات'] || ''
                                 };
@@ -2715,14 +2737,14 @@
                             } else {
                                 // In merge mode, find existing student or create new
                                 student = students.find(s => 
-                                    s.name === storageName || 
-                                    formatNameForDisplay(s.name) === studentName
+                                    s.classId == targetClassId && 
+                                    (s.name === storageName || formatNameForDisplay(s.name) === studentName)
                                 );
                                 
                                 if (!student) {
                                     student = {
                                         id: Date.now() + index,
-                                        classId: targetClassId,
+                                        classId: parseInt(targetClassId),
                                         name: storageName,
                                         notes: excelStudent['توضیحات'] || ''
                                     };
@@ -2791,37 +2813,50 @@
                         const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
                         console.log('Found attendance records:', attendanceData.length);
                         
+                        // Extract session titles from the first row (excluding name and code columns)
+                        const sessionTitles = Object.keys(attendanceData[0] || {}).filter(key => 
+                            key !== 'نام دانشجو' && key !== 'کد دانشجویی'
+                        );
+                        
+                        // Create sessions for each title if they don't exist
+                        sessionTitles.forEach(title => {
+                            let session = sessions.find(s => s.title === title && s.classId == targetClassId);
+                            if (!session) {
+                                // Generate a reasonable date for the session
+                                const today = new Date();
+                                const persianDate = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+                                const sessionDate = `${persianDate[0]}/${String(persianDate[1]).padStart(2, '0')}/${String(persianDate[2]).padStart(2, '0')}`;
+                                
+                                session = {
+                                    id: Date.now() + Math.random(),
+                                    classId: parseInt(targetClassId),
+                                    title: title,
+                                    date: sessionDate,
+                                    description: 'وارد شده از Excel'
+                                };
+                                sessions.push(session);
+                            }
+                        });
+                        
                         attendanceData.forEach(row => {
                             const studentName = row['نام دانشجو'];
                             if (!studentName) return;
                             
                             const storageName = formatNameForStorage(studentName);
                             const student = students.find(s => 
-                                s.name === storageName || 
-                                formatNameForDisplay(s.name) === studentName
+                                s.classId == targetClassId && 
+                                (s.name === storageName || formatNameForDisplay(s.name) === studentName)
                             );
                             
                             if (student) {
-                                Object.keys(row).forEach(key => {
-                                    if (key !== 'نام دانشجو' && key !== 'کد دانشجویی') {
-                                        // Find or create session
-                                        let session = sessions.find(s => s.title === key);
-                                        if (!session) {
-                                            session = {
-                                                id: Date.now() + Math.random(),
-                                                classId: student.classId,
-                                                title: key,
-                                                date: '1403/01/01', // Default date
-                                                description: 'وارد شده از Excel'
-                                            };
-                                            sessions.push(session);
-                                        }
-                                        
+                                sessionTitles.forEach(title => {
+                                    const session = sessions.find(s => s.title === title && s.classId == targetClassId);
+                                    if (session) {
                                         // Set attendance
                                         if (!attendance[session.id]) {
                                             attendance[session.id] = {};
                                         }
-                                        attendance[session.id][student.id] = row[key] === 'حاضر';
+                                        attendance[session.id][student.id] = row[title] === 'حاضر';
                                     }
                                 });
                             }
@@ -2837,7 +2872,7 @@
                     renderStats();
                     
                     closeModal('excelImportModal');
-                    alert(`اطلاعات با موفقیت از فایل Excel وارد شد\n\nتعداد دانشجویان: ${students.length}\nتعداد جلسات: ${sessions.length}`);
+                    alert(`اطلاعات با موفقیت از فایل Excel وارد شد\n\nتعداد دانشجویان: ${students.filter(s => s.classId == targetClassId).length}\nتعداد جلسات: ${sessions.filter(s => s.classId == targetClassId).length}`);
                     
                 } catch (error) {
                     console.error('Excel import error:', error);
