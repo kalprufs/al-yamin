@@ -896,7 +896,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>نام دانشجو:</label>
-                        <input type="text" id="modalStudentName" readonly>
+                        <input type="text" id="modalStudentName" onchange="updateStudentName()">
                     </div>
                     <div class="form-group">
                         <label>کد دانشجویی:</label>
@@ -1104,37 +1104,8 @@
             });
         }
 
-        // تابع برای فرمت‌بندی نام برای نمایش (نام خانوادگی اول)
-        function formatNameForDisplay(fullName) {
-            if (!fullName || typeof fullName !== 'string') return fullName;
-            
-            const nameParts = fullName.trim().split(' ').filter(part => part.trim() !== '');
-            
-            if (nameParts.length <= 1) {
-                return fullName;
-            }
-            
-            // فرض می‌کنیم آخرین کلمه نام خانوادگی است
-            const lastName = nameParts.pop();
-            const firstName = nameParts.join(' ');
-            
-            return `${lastName}، ${firstName}`;
-        }
-
-        // تابع برای تبدیل نام نمایشی به فرمت ذخیره‌سازی
-        function formatNameForStorage(displayName) {
-            if (!displayName || typeof displayName !== 'string') return displayName;
-            
-            // تبدیل "احمدی، علی" به "علی احمدی"
-            if (displayName.includes('،')) {
-                const parts = displayName.split('،').map(part => part.trim());
-                if (parts.length === 2) {
-                    return `${parts[1]} ${parts[0]}`;
-                }
-            }
-            
-            return displayName;
-        }
+        // تابع برای فرمت‌بندی نام برای نمایش (نام خانوادگی اول) - حذف شده
+        // دانشجویان به همان صورتی که وارد شده‌اند نمایش داده می‌شوند
         
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
@@ -1501,12 +1472,11 @@
             
             studentsList.innerHTML = classStudents.map(student => {
                 const totalScore = calculateStudentScore(student.id);
-                const displayName = formatNameForDisplay(student.name);
                 
                 return `
                     <div class="student-item">
                         <div class="student-header">
-                            <div class="student-name">${displayName}</div>
+                            <div class="student-name">${student.name}</div>
                             <div>
                                 <button onclick="editStudent(${student.id})" class="btn btn-primary">ویرایش</button>
                                 <button onclick="deleteStudent(${student.id})" class="btn btn-danger">حذف</button>
@@ -1637,6 +1607,18 @@
             updateModalScore(id);
             
             document.getElementById('studentModal').style.display = 'block';
+        }
+        
+        // تابع جدید برای به‌روزرسانی نام دانشجو
+        function updateStudentName() {
+            const studentId = document.getElementById('modalStudentId').value;
+            const newName = document.getElementById('modalStudentName').value;
+            
+            const student = students.find(s => s.id == studentId);
+            if (student) {
+                student.name = newName;
+                saveData();
+            }
         }
         
         function renderBooksList(books) {
@@ -2142,11 +2124,10 @@
                 <div class="attendance-list">
                     ${classStudents.map(student => {
                         const isPresent = attendance[sessionId][student.id] === true;
-                        const displayName = formatNameForDisplay(student.name);
                         return `
                             <div class="attendance-item">
                                 <input type="checkbox" id="attendance_${student.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendance(${sessionId}, ${student.id}, this.checked)">
-                                <span class="student-name-clickable" onclick="event.stopPropagation(); editStudentFromAttendance(${student.id})">${displayName}</span>
+                                <span class="student-name-clickable" onclick="event.stopPropagation(); editStudentFromAttendance(${student.id})">${student.name}</span>
                                 <div class="score-badge">${calculateStudentScore(student.id).toFixed(2)}</div>
                             </div>
                         `;
@@ -2438,7 +2419,7 @@
                 });
                 
                 return {
-                    'نام دانشجو': formatNameForDisplay(student.name),
+                    'نام دانشجو': student.name,
                     'کد دانشجویی': studentDetail.studentCode || '',
                     'توضیحات': student.notes,
                     'شهر': studentDetail.city || '',
@@ -2471,13 +2452,13 @@
                 
                 classStudents.forEach(student => {
                     const row = { 
-                        'نام دانشجو': formatNameForDisplay(student.name),
+                        'نام دانشجو': student.name,
                         'کد دانشجویی': (studentDetails[student.id] || {}).studentCode || ''
                     };
                     
                     classSessions.forEach(session => {
                         const isPresent = attendance[session.id] && attendance[session.id][student.id] === true;
-                        row[session.title] = isPresent ? 'حاضر' : 'غایب';
+                        row[`${session.title} (${session.date})`] = isPresent ? 'حاضر' : 'غایب';
                     });
                     
                     attendanceData.push(row);
@@ -2699,9 +2680,6 @@
                             const studentName = excelStudent['نام دانشجو'];
                             if (!studentName) return;
                             
-                            // تبدیل نام نمایشی به فرمت ذخیره‌سازی در صورت نیاز
-                            const storageName = formatNameForStorage(studentName);
-                            
                             let student;
                             
                             if (importType === 'replace') {
@@ -2709,22 +2687,19 @@
                                 student = {
                                     id: Date.now() + index,
                                     classId: targetClassId,
-                                    name: storageName,
+                                    name: studentName,
                                     notes: excelStudent['توضیحات'] || ''
                                 };
                                 students.push(student);
                             } else {
                                 // در حالت ادغام، یافتن دانشجوی موجود یا ایجاد جدید
-                                student = students.find(s => 
-                                    s.name === storageName || 
-                                    formatNameForDisplay(s.name) === studentName
-                                );
+                                student = students.find(s => s.name === studentName);
                                 
                                 if (!student) {
                                     student = {
                                         id: Date.now() + index,
                                         classId: targetClassId,
-                                        name: storageName,
+                                        name: studentName,
                                         notes: excelStudent['توضیحات'] || ''
                                     };
                                     students.push(student);
@@ -2795,19 +2770,30 @@
                         // استخراج نام جلسات از ستون‌ها
                         if (attendanceData.length > 0) {
                             const firstRow = attendanceData[0];
-                            const sessionTitles = Object.keys(firstRow).filter(key => 
+                            const sessionColumns = Object.keys(firstRow).filter(key => 
                                 key !== 'نام دانشجو' && key !== 'کد دانشجویی'
                             );
                             
-                            console.log('جلسات شناسایی شده:', sessionTitles);
+                            console.log('جلسات شناسایی شده:', sessionColumns);
                             
-                            sessionTitles.forEach(sessionTitle => {
+                            sessionColumns.forEach(sessionColumn => {
+                                // استخراج تاریخ از نام ستون
+                                let sessionTitle = sessionColumn;
+                                let sessionDate = '1403/01/01'; // تاریخ پیش‌فرض
+                                
+                                // استخراج تاریخ از پرانتز
+                                const dateMatch = sessionColumn.match(/\(([^)]+)\)/);
+                                if (dateMatch) {
+                                    sessionDate = dateMatch[1];
+                                    sessionTitle = sessionColumn.replace(/\([^)]+\)/, '').trim();
+                                }
+                                
                                 // ایجاد جلسه جدید
                                 const session = {
                                     id: Date.now() + Math.random(),
                                     classId: targetClassId,
                                     title: sessionTitle,
-                                    date: '1403/01/01', // تاریخ پیش‌فرض
+                                    date: sessionDate,
                                     description: 'وارد شده از Excel'
                                 };
                                 sessions.push(session);
@@ -2817,17 +2803,13 @@
                                     const studentName = row['نام دانشجو'];
                                     if (!studentName) return;
                                     
-                                    const storageName = formatNameForStorage(studentName);
-                                    const student = students.find(s => 
-                                        s.name === storageName || 
-                                        formatNameForDisplay(s.name) === studentName
-                                    );
+                                    const student = students.find(s => s.name === studentName);
                                     
                                     if (student) {
                                         if (!attendance[session.id]) {
                                             attendance[session.id] = {};
                                         }
-                                        attendance[session.id][student.id] = row[sessionTitle] === 'حاضر';
+                                        attendance[session.id][student.id] = row[sessionColumn] === 'حاضر';
                                     }
                                 });
                             });
