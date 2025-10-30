@@ -2604,15 +2604,27 @@
                         previewHtml += `<h5 style="color: #667eea; margin: 15px 0 10px 0;">دانشجویان (${studentData.length} نفر)</h5>`;
                         if (studentData.length > 0) {
                             previewHtml += `<table style="width: 100%; border-collapse: collapse; font-size: 12px;">`;
-                            previewHtml += `<tr style="background: #f8f9fa;"><th style="border: 1px solid #ddd; padding: 8px;">نام</th><th style="border: 1px solid #ddd; padding: 8px;">کد دانشجویی</th><th style="border: 1px solid #ddd; padding: 8px;">امتیاز کل</th></tr>`;
+                            previewHtml += `<tr style="background: #f8f9fa;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">نام</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">کد دانشجویی</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">شهر</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">امتیاز کل</th>
+                            </tr>`;
                             studentData.slice(0, 5).forEach(student => {
-                                previewHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${student['نام دانشجو'] || ''}</td><td style="border: 1px solid #ddd; padding: 8px;">${student['کد دانشجویی'] || ''}</td><td style="border: 1px solid #ddd; padding: 8px;">${student['امتیاز کل'] || ''}</td></tr>`;
+                                previewHtml += `<tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['نام دانشجو'] || ''}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['کد دانشجویی'] || ''}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['شهر'] || ''}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['امتیاز کل'] || ''}</td>
+                                </tr>`;
                             });
                             if (studentData.length > 5) {
-                                previewHtml += `<tr><td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: center; color: #666;">و ${studentData.length - 5} دانشجوی دیگر...</td></tr>`;
+                                previewHtml += `<tr><td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: center; color: #666;">و ${studentData.length - 5} دانشجوی دیگر...</td></tr>`;
                             }
                             previewHtml += `</table>`;
                         }
+                    } else {
+                        previewHtml += `<p style="color: #dc3545;">❌ برگه "دانشجویان" در فایل Excel یافت نشد</p>`;
                     }
                     
                     // Preview attendance sheet
@@ -2623,6 +2635,8 @@
                             const sessionCount = Object.keys(attendanceData[0]).length - 2; // Subtract name and code columns
                             previewHtml += `<p>${sessionCount} جلسه حضور و غیاب شناسایی شد</p>`;
                         }
+                    } else {
+                        previewHtml += `<p style="color: #dc3545;">❌ برگه "حضور و غیاب" در فایل Excel یافت نشد</p>`;
                     }
                     
                     previewHtml += '</div>';
@@ -2636,7 +2650,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Main Excel import function
+        // Main Excel import function - CORRECTED VERSION
         function importFromExcel() {
             const fileInput = document.getElementById('excelFileInput');
             const importType = document.getElementById('excelImportType').value;
@@ -2663,97 +2677,129 @@
                         studentDetails = {};
                     }
                     
+                    // Create a default class if none exists
+                    if (classes.length === 0) {
+                        const defaultClass = {
+                            id: Date.now(),
+                            name: 'کلاس وارد شده از اکسل',
+                            description: 'این کلاس از طریق فایل Excel وارد شده است'
+                        };
+                        classes.push(defaultClass);
+                    }
+                    
+                    const targetClassId = classes[0].id; // Use first available class
+                    
                     // Process students sheet
                     if (workbook.Sheets['دانشجویان']) {
                         const studentData = XLSX.utils.sheet_to_json(workbook.Sheets['دانشجویان']);
+                        console.log('Found students in Excel:', studentData.length);
                         
                         studentData.forEach((excelStudent, index) => {
-                            // Find or create student
-                            let student = students.find(s => s.name === excelStudent['نام دانشجو']);
+                            const studentName = excelStudent['نام دانشجو'];
+                            if (!studentName) return;
                             
-                            if (!student && importType === 'merge') {
-                                // Create new student
+                            // Convert display name back to storage format if needed
+                            const storageName = formatNameForStorage(studentName);
+                            
+                            let student;
+                            
+                            if (importType === 'replace') {
+                                // Create new student in replace mode
                                 student = {
                                     id: Date.now() + index,
-                                    classId: currentClassId || (classes.length > 0 ? classes[0].id : 1),
-                                    name: excelStudent['نام دانشجو'],
+                                    classId: targetClassId,
+                                    name: storageName,
                                     notes: excelStudent['توضیحات'] || ''
                                 };
                                 students.push(student);
-                            } else if (importType === 'replace') {
-                                // In replace mode, use all students from Excel
-                                student = {
-                                    id: Date.now() + index,
-                                    classId: currentClassId || (classes.length > 0 ? classes[0].id : 1),
-                                    name: excelStudent['نام دانشجو'],
-                                    notes: excelStudent['توضیحات'] || ''
-                                };
-                                students.push(student);
-                            }
-                            
-                            if (student) {
-                                // Update student details
-                                if (!studentDetails[student.id]) {
-                                    studentDetails[student.id] = {
-                                        books: [],
-                                        movies: [],
-                                        series: [],
-                                        studentCode: '',
-                                        city: '',
-                                        major: '',
-                                        minor: '',
-                                        isMarried: false,
-                                        hasChild: false,
-                                        hasJob: false,
-                                        hasAchievement: false,
-                                        sessionScores: {}
+                            } else {
+                                // In merge mode, find existing student or create new
+                                student = students.find(s => 
+                                    s.name === storageName || 
+                                    formatNameForDisplay(s.name) === studentName
+                                );
+                                
+                                if (!student) {
+                                    student = {
+                                        id: Date.now() + index,
+                                        classId: targetClassId,
+                                        name: storageName,
+                                        notes: excelStudent['توضیحات'] || ''
                                     };
-                                }
-                                
-                                const detail = studentDetails[student.id];
-                                detail.studentCode = excelStudent['کد دانشجویی'] || '';
-                                detail.city = excelStudent['شهر'] || '';
-                                detail.major = excelStudent['رشته اصلی'] || '';
-                                detail.minor = excelStudent['رشته فرعی'] || '';
-                                detail.isMarried = excelStudent['متأهل'] === 'بله';
-                                detail.hasChild = excelStudent['فرزند'] === 'بله';
-                                detail.hasJob = excelStudent['شغل'] === 'بله';
-                                detail.hasAchievement = excelStudent['مقام/قهرمانی'] === 'بله';
-                                
-                                // Process books
-                                if (excelStudent['کتاب‌ها']) {
-                                    detail.books = excelStudent['کتاب‌ها'].split(',').map(book => ({
-                                        name: book.trim(),
-                                        points: parseFloat(excelStudent['امتیاز کتاب‌ها']) || scoreConfig.shortBook
-                                    })).filter(book => book.name);
-                                }
-                                
-                                // Process movies
-                                if (excelStudent['فیلم‌ها']) {
-                                    detail.movies = excelStudent['فیلم‌ها'].split(',').map(movie => ({
-                                        name: movie.trim(),
-                                        points: parseFloat(excelStudent['امتیاز فیلم‌ها']) || scoreConfig.movie
-                                    })).filter(movie => movie.name);
-                                }
-                                
-                                // Process series
-                                if (excelStudent['سریال‌ها']) {
-                                    detail.series = excelStudent['سریال‌ها'].split(',').map(series => ({
-                                        name: series.trim(),
-                                        points: parseFloat(excelStudent['امتیاز سریال‌ها']) || scoreConfig.series
-                                    })).filter(series => series.name);
+                                    students.push(student);
                                 }
                             }
+                            
+                            // Always update student details
+                            if (!studentDetails[student.id]) {
+                                studentDetails[student.id] = {
+                                    books: [],
+                                    movies: [],
+                                    series: [],
+                                    studentCode: '',
+                                    city: '',
+                                    major: '',
+                                    minor: '',
+                                    isMarried: false,
+                                    hasChild: false,
+                                    hasJob: false,
+                                    hasAchievement: false,
+                                    sessionScores: {}
+                                };
+                            }
+                            
+                            const detail = studentDetails[student.id];
+                            detail.studentCode = excelStudent['کد دانشجویی'] || '';
+                            detail.city = excelStudent['شهر'] || '';
+                            detail.major = excelStudent['رشته اصلی'] || '';
+                            detail.minor = excelStudent['رشته فرعی'] || '';
+                            detail.isMarried = excelStudent['متأهل'] === 'بله';
+                            detail.hasChild = excelStudent['فرزند'] === 'بله';
+                            detail.hasJob = excelStudent['شغل'] === 'بله';
+                            detail.hasAchievement = excelStudent['مقام/قهرمانی'] === 'بله';
+                            
+                            // Process books
+                            if (excelStudent['کتاب‌ها'] && excelStudent['کتاب‌ها'].trim() !== '') {
+                                detail.books = excelStudent['کتاب‌ها'].split(',').map(book => ({
+                                    name: book.trim(),
+                                    points: parseFloat(excelStudent['امتیاز کتاب‌ها']) || scoreConfig.shortBook
+                                })).filter(book => book.name && book.name.trim() !== '');
+                            }
+                            
+                            // Process movies
+                            if (excelStudent['فیلم‌ها'] && excelStudent['فیلم‌ها'].trim() !== '') {
+                                detail.movies = excelStudent['فیلم‌ها'].split(',').map(movie => ({
+                                    name: movie.trim(),
+                                    points: parseFloat(excelStudent['امتیاز فیلم‌ها']) || scoreConfig.movie
+                                })).filter(movie => movie.name && movie.name.trim() !== '');
+                            }
+                            
+                            // Process series
+                            if (excelStudent['سریال‌ها'] && excelStudent['سریال‌ها'].trim() !== '') {
+                                detail.series = excelStudent['سریال‌ها'].split(',').map(series => ({
+                                    name: series.trim(),
+                                    points: parseFloat(excelStudent['امتیاز سریال‌ها']) || scoreConfig.series
+                                })).filter(series => series.name && series.name.trim() !== '');
+                            }
+                            
+                            console.log('Processed student:', student.name);
                         });
                     }
                     
                     // Process attendance sheet
                     if (workbook.Sheets['حضور و غیاب']) {
                         const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
+                        console.log('Found attendance records:', attendanceData.length);
                         
                         attendanceData.forEach(row => {
                             const studentName = row['نام دانشجو'];
-                            const student = students.find(s => s.name === studentName);
+                            if (!studentName) return;
+                            
+                            const storageName = formatNameForStorage(studentName);
+                            const student = students.find(s => 
+                                s.name === storageName || 
+                                formatNameForDisplay(s.name) === studentName
+                            );
                             
                             if (student) {
                                 Object.keys(row).forEach(key => {
@@ -2791,9 +2837,10 @@
                     renderStats();
                     
                     closeModal('excelImportModal');
-                    alert('اطلاعات با موفقیت از فایل Excel وارد شد');
+                    alert(`اطلاعات با موفقیت از فایل Excel وارد شد\n\nتعداد دانشجویان: ${students.length}\nتعداد جلسات: ${sessions.length}`);
                     
                 } catch (error) {
+                    console.error('Excel import error:', error);
                     alert('خطا در وارد کردن اطلاعات از Excel: ' + error.message);
                 }
             };
