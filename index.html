@@ -864,9 +864,10 @@
                 <div class="stats-grid" id="statsGrid"></div>
                 
                 <div class="export-section">
-                    <h3>خروجی داده‌ها</h3>
-                    <p style="margin-bottom: 18px; color: #666;">تمام اطلاعات را در قالب فایل Excel دریافت کنید</p>
+                    <h3>خروجی و ورودی داده‌ها</h3>
+                    <p style="margin-bottom: 18px; color: #666;">تمام اطلاعات را در قالب فایل Excel دریافت یا وارد کنید</p>
                     <button onclick="exportToExcel()" class="btn btn-success">دانلود فایل Excel</button>
+                    <button onclick="openExcelImportModal()" class="btn btn-info">وارد کردن از Excel</button>
                 </div>
                 
                 <!-- بخش خروجی JSON -->
@@ -1034,6 +1035,39 @@
         </div>
     </div>
 
+    <!-- مودال وارد کردن Excel -->
+    <div id="excelImportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('excelImportModal')">&times;</span>
+            <h2>وارد کردن اطلاعات از Excel</h2>
+            
+            <div class="form-group">
+                <label>انتخاب فایل Excel:</label>
+                <input type="file" id="excelFileInput" class="file-input" accept=".xlsx, .xls">
+                <label for="excelFileInput" class="file-label">انتخاب فایل Excel</label>
+                <span id="excelFileName" style="margin-right: 10px; color: #666;">هیچ فایلی انتخاب نشده</span>
+            </div>
+            
+            <div class="form-group">
+                <label>نوع عملیات:</label>
+                <select id="excelImportType" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
+                    <option value="replace">جایگزینی کامل اطلاعات فعلی</option>
+                    <option value="merge">ادغام با اطلاعات فعلی</option>
+                </select>
+            </div>
+            
+            <div id="excelImportPreview" style="margin: 20px 0; display: none;">
+                <h4>پیش‌نمایش داده‌ها:</h4>
+                <div id="previewContent" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+            
+            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="importFromExcel()" class="btn btn-success">وارد کردن اطلاعات</button>
+                <button onclick="closeModal('excelImportModal')" class="btn btn-danger">انصراف</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let scoreConfig = {
             isMarried: 1,
@@ -1058,6 +1092,45 @@
         let studentDetails = {};
         let currentSessionId = null;
         let currentClassId = null;
+        
+        // Add these functions for Persian name processing and sorting
+        function formatNameForDisplay(fullName) {
+            if (!fullName || typeof fullName !== 'string') return fullName;
+            
+            const nameParts = fullName.trim().split(' ').filter(part => part.trim() !== '');
+            
+            if (nameParts.length <= 1) {
+                return fullName;
+            }
+            
+            // Assume last word is last name, rest is first name
+            const lastName = nameParts.pop();
+            const firstName = nameParts.join(' ');
+            
+            return `${lastName}، ${firstName}`;
+        }
+
+        function formatNameForStorage(displayName) {
+            if (!displayName || typeof displayName !== 'string') return displayName;
+            
+            // Convert "احمدی، علی" back to "علی احمدی"
+            if (displayName.includes('،')) {
+                const parts = displayName.split('،').map(part => part.trim());
+                if (parts.length === 2) {
+                    return `${parts[1]} ${parts[0]}`;
+                }
+            }
+            
+            return displayName;
+        }
+
+        function sortStudentsAlphabetically(studentsList) {
+            return studentsList.sort((a, b) => {
+                const nameA = formatNameForDisplay(a.name).toLowerCase();
+                const nameB = formatNameForDisplay(b.name).toLowerCase();
+                return nameA.localeCompare(nameB, 'fa');
+            });
+        }
         
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
@@ -1105,6 +1178,15 @@
                     reader.readAsText(file);
                 }
             });
+
+            // Add Excel file input event listener
+            document.getElementById('excelFileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('excelFileName').textContent = file.name;
+                    previewExcelData(file);
+                }
+            });
         });
         
         function showTab(tabName) {
@@ -1133,6 +1215,13 @@
         
         function openImportModal() {
             document.getElementById('importModal').style.display = 'block';
+        }
+
+        function openExcelImportModal() {
+            document.getElementById('excelImportModal').style.display = 'block';
+            document.getElementById('excelImportPreview').style.display = 'none';
+            document.getElementById('excelFileInput').value = '';
+            document.getElementById('excelFileName').textContent = 'هیچ فایلی انتخاب نشده';
         }
         
         function closeModal(modalId) {
@@ -1327,13 +1416,16 @@
                 return;
             }
             
-            const name = document.getElementById('studentName').value;
+            let name = document.getElementById('studentName').value;
             const notes = document.getElementById('studentNotes').value;
+            
+            // Store the name in the original format (don't format for storage here)
+            // The formatting will be applied only for display
             
             const student = {
                 id: Date.now(),
                 classId: parseInt(classId),
-                name,
+                name: name, // Store as entered
                 notes
             };
             
@@ -1372,7 +1464,7 @@
                 const student = {
                     id: Date.now() + Math.random(),
                     classId: parseInt(classId),
-                    name: name.trim(),
+                    name: name.trim(), // Store as entered
                     notes: ''
                 };
                 
@@ -1396,7 +1488,10 @@
                 return;
             }
             
-            const classStudents = students.filter(student => student.classId == classId);
+            let classStudents = students.filter(student => student.classId == classId);
+            
+            // Sort students alphabetically
+            classStudents = sortStudentsAlphabetically(classStudents);
             
             if (classStudents.length === 0) {
                 studentsList.innerHTML = '<div class="empty-state">هنوز دانشجویی برای این کلاس اضافه نشده است</div>';
@@ -1405,11 +1500,12 @@
             
             studentsList.innerHTML = classStudents.map(student => {
                 const totalScore = calculateStudentScore(student.id);
+                const displayName = formatNameForDisplay(student.name);
                 
                 return `
                     <div class="student-item">
                         <div class="student-header">
-                            <div class="student-name">${student.name}</div>
+                            <div class="student-name">${displayName}</div>
                             <div>
                                 <button onclick="editStudent(${student.id})" class="btn btn-primary">ویرایش</button>
                                 <button onclick="deleteStudent(${student.id})" class="btn btn-danger">حذف</button>
@@ -2034,7 +2130,10 @@
                 attendance[sessionId] = {};
             }
             
-            const classStudents = students.filter(student => student.classId == currentClassId);
+            let classStudents = students.filter(student => student.classId == currentClassId);
+            
+            // Sort students alphabetically
+            classStudents = sortStudentsAlphabetically(classStudents);
             
             let html = `
                 <h3 style="margin: 20px 0;">ثبت حضور و غیاب</h3>
@@ -2042,10 +2141,11 @@
                 <div class="attendance-list">
                     ${classStudents.map(student => {
                         const isPresent = attendance[sessionId][student.id] === true;
+                        const displayName = formatNameForDisplay(student.name);
                         return `
                             <div class="attendance-item">
                                 <input type="checkbox" id="attendance_${student.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendance(${sessionId}, ${student.id}, this.checked)">
-                                <span class="student-name-clickable" onclick="event.stopPropagation(); editStudentFromAttendance(${student.id})">${student.name}</span>
+                                <span class="student-name-clickable" onclick="event.stopPropagation(); editStudentFromAttendance(${student.id})">${displayName}</span>
                                 <div class="score-badge">${calculateStudentScore(student.id).toFixed(2)}</div>
                             </div>
                         `;
@@ -2337,7 +2437,7 @@
                 });
                 
                 return {
-                    'نام دانشجو': student.name,
+                    'نام دانشجو': formatNameForDisplay(student.name),
                     'کد دانشجویی': studentDetail.studentCode || '',
                     'توضیحات': student.notes,
                     'شهر': studentDetail.city || '',
@@ -2370,7 +2470,7 @@
                 
                 classStudents.forEach(student => {
                     const row = { 
-                        'نام دانشجو': student.name,
+                        'نام دانشجو': formatNameForDisplay(student.name),
                         'کد دانشجویی': (studentDetails[student.id] || {}).studentCode || ''
                     };
                     
@@ -2486,6 +2586,219 @@
             } catch (error) {
                 alert('خطا در وارد کردن JSON: ' + error.message);
             }
+        }
+
+        // Function to preview Excel data
+        function previewExcelData(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    let previewHtml = '<div style="direction: rtl; text-align: right;">';
+                    
+                    // Preview students sheet
+                    if (workbook.Sheets['دانشجویان']) {
+                        const studentData = XLSX.utils.sheet_to_json(workbook.Sheets['دانشجویان']);
+                        previewHtml += `<h5 style="color: #667eea; margin: 15px 0 10px 0;">دانشجویان (${studentData.length} نفر)</h5>`;
+                        if (studentData.length > 0) {
+                            previewHtml += `<table style="width: 100%; border-collapse: collapse; font-size: 12px;">`;
+                            previewHtml += `<tr style="background: #f8f9fa;"><th style="border: 1px solid #ddd; padding: 8px;">نام</th><th style="border: 1px solid #ddd; padding: 8px;">کد دانشجویی</th><th style="border: 1px solid #ddd; padding: 8px;">امتیاز کل</th></tr>`;
+                            studentData.slice(0, 5).forEach(student => {
+                                previewHtml += `<tr><td style="border: 1px solid #ddd; padding: 8px;">${student['نام دانشجو'] || ''}</td><td style="border: 1px solid #ddd; padding: 8px;">${student['کد دانشجویی'] || ''}</td><td style="border: 1px solid #ddd; padding: 8px;">${student['امتیاز کل'] || ''}</td></tr>`;
+                            });
+                            if (studentData.length > 5) {
+                                previewHtml += `<tr><td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: center; color: #666;">و ${studentData.length - 5} دانشجوی دیگر...</td></tr>`;
+                            }
+                            previewHtml += `</table>`;
+                        }
+                    }
+                    
+                    // Preview attendance sheet
+                    if (workbook.Sheets['حضور و غیاب']) {
+                        const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
+                        previewHtml += `<h5 style="color: #667eea; margin: 15px 0 10px 0;">حضور و غیاب (${attendanceData.length} رکورد)</h5>`;
+                        if (attendanceData.length > 0) {
+                            const sessionCount = Object.keys(attendanceData[0]).length - 2; // Subtract name and code columns
+                            previewHtml += `<p>${sessionCount} جلسه حضور و غیاب شناسایی شد</p>`;
+                        }
+                    }
+                    
+                    previewHtml += '</div>';
+                    document.getElementById('previewContent').innerHTML = previewHtml;
+                    document.getElementById('excelImportPreview').style.display = 'block';
+                    
+                } catch (error) {
+                    alert('خطا در خواندن فایل Excel: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Main Excel import function
+        function importFromExcel() {
+            const fileInput = document.getElementById('excelFileInput');
+            const importType = document.getElementById('excelImportType').value;
+            
+            if (!fileInput.files[0]) {
+                alert('لطفاً یک فایل Excel انتخاب کنید');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    if (importType === 'replace') {
+                        // Reset all data
+                        classes = [];
+                        sessions = [];
+                        students = [];
+                        attendance = {};
+                        studentDetails = {};
+                    }
+                    
+                    // Process students sheet
+                    if (workbook.Sheets['دانشجویان']) {
+                        const studentData = XLSX.utils.sheet_to_json(workbook.Sheets['دانشجویان']);
+                        
+                        studentData.forEach((excelStudent, index) => {
+                            // Find or create student
+                            let student = students.find(s => s.name === excelStudent['نام دانشجو']);
+                            
+                            if (!student && importType === 'merge') {
+                                // Create new student
+                                student = {
+                                    id: Date.now() + index,
+                                    classId: currentClassId || (classes.length > 0 ? classes[0].id : 1),
+                                    name: excelStudent['نام دانشجو'],
+                                    notes: excelStudent['توضیحات'] || ''
+                                };
+                                students.push(student);
+                            } else if (importType === 'replace') {
+                                // In replace mode, use all students from Excel
+                                student = {
+                                    id: Date.now() + index,
+                                    classId: currentClassId || (classes.length > 0 ? classes[0].id : 1),
+                                    name: excelStudent['نام دانشجو'],
+                                    notes: excelStudent['توضیحات'] || ''
+                                };
+                                students.push(student);
+                            }
+                            
+                            if (student) {
+                                // Update student details
+                                if (!studentDetails[student.id]) {
+                                    studentDetails[student.id] = {
+                                        books: [],
+                                        movies: [],
+                                        series: [],
+                                        studentCode: '',
+                                        city: '',
+                                        major: '',
+                                        minor: '',
+                                        isMarried: false,
+                                        hasChild: false,
+                                        hasJob: false,
+                                        hasAchievement: false,
+                                        sessionScores: {}
+                                    };
+                                }
+                                
+                                const detail = studentDetails[student.id];
+                                detail.studentCode = excelStudent['کد دانشجویی'] || '';
+                                detail.city = excelStudent['شهر'] || '';
+                                detail.major = excelStudent['رشته اصلی'] || '';
+                                detail.minor = excelStudent['رشته فرعی'] || '';
+                                detail.isMarried = excelStudent['متأهل'] === 'بله';
+                                detail.hasChild = excelStudent['فرزند'] === 'بله';
+                                detail.hasJob = excelStudent['شغل'] === 'بله';
+                                detail.hasAchievement = excelStudent['مقام/قهرمانی'] === 'بله';
+                                
+                                // Process books
+                                if (excelStudent['کتاب‌ها']) {
+                                    detail.books = excelStudent['کتاب‌ها'].split(',').map(book => ({
+                                        name: book.trim(),
+                                        points: parseFloat(excelStudent['امتیاز کتاب‌ها']) || scoreConfig.shortBook
+                                    })).filter(book => book.name);
+                                }
+                                
+                                // Process movies
+                                if (excelStudent['فیلم‌ها']) {
+                                    detail.movies = excelStudent['فیلم‌ها'].split(',').map(movie => ({
+                                        name: movie.trim(),
+                                        points: parseFloat(excelStudent['امتیاز فیلم‌ها']) || scoreConfig.movie
+                                    })).filter(movie => movie.name);
+                                }
+                                
+                                // Process series
+                                if (excelStudent['سریال‌ها']) {
+                                    detail.series = excelStudent['سریال‌ها'].split(',').map(series => ({
+                                        name: series.trim(),
+                                        points: parseFloat(excelStudent['امتیاز سریال‌ها']) || scoreConfig.series
+                                    })).filter(series => series.name);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Process attendance sheet
+                    if (workbook.Sheets['حضور و غیاب']) {
+                        const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
+                        
+                        attendanceData.forEach(row => {
+                            const studentName = row['نام دانشجو'];
+                            const student = students.find(s => s.name === studentName);
+                            
+                            if (student) {
+                                Object.keys(row).forEach(key => {
+                                    if (key !== 'نام دانشجو' && key !== 'کد دانشجویی') {
+                                        // Find or create session
+                                        let session = sessions.find(s => s.title === key);
+                                        if (!session) {
+                                            session = {
+                                                id: Date.now() + Math.random(),
+                                                classId: student.classId,
+                                                title: key,
+                                                date: '1403/01/01', // Default date
+                                                description: 'وارد شده از Excel'
+                                            };
+                                            sessions.push(session);
+                                        }
+                                        
+                                        // Set attendance
+                                        if (!attendance[session.id]) {
+                                            attendance[session.id] = {};
+                                        }
+                                        attendance[session.id][student.id] = row[key] === 'حاضر';
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    
+                    saveData();
+                    renderClasses();
+                    renderClassSelectors();
+                    renderSessions();
+                    renderStudents();
+                    renderAttendance();
+                    renderStats();
+                    
+                    closeModal('excelImportModal');
+                    alert('اطلاعات با موفقیت از فایل Excel وارد شد');
+                    
+                } catch (error) {
+                    alert('خطا در وارد کردن اطلاعات از Excel: ' + error.message);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
         }
         
         function resetData() {
