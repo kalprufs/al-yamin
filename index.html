@@ -6,7 +6,6 @@
     <title>استادیار - سیستم مدیریت حضور و غیاب کلاس</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* تمام استایل‌ها مانند قبل باقی می‌مانند */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
         
         * {
@@ -827,6 +826,7 @@
                     </div>
                     <button type="submit" class="btn btn-primary">افزودن دانشجو</button>
                     <button type="button" onclick="toggleBulkAdd()" class="btn btn-info">افزودن گروهی</button>
+                    <button type="button" onclick="importFromExcel()" class="btn btn-warning">ورود از اکسل</button>
                     <button type="button" onclick="deleteAllStudents()" class="btn btn-danger">حذف همه دانشجویان</button>
                 </form>
                 
@@ -865,10 +865,9 @@
                 <div class="stats-grid" id="statsGrid"></div>
                 
                 <div class="export-section">
-                    <h3>خروجی و ورودی داده‌ها</h3>
-                    <p style="margin-bottom: 18px; color: #666;">تمام اطلاعات را در قالب فایل Excel دریافت یا وارد کنید</p>
+                    <h3>خروجی داده‌ها</h3>
+                    <p style="margin-bottom: 18px; color: #666;">تمام اطلاعات را در قالب فایل Excel دریافت کنید</p>
                     <button onclick="exportToExcel()" class="btn btn-success">دانلود فایل Excel</button>
-                    <button onclick="openExcelImportModal()" class="btn btn-info">وارد کردن از Excel</button>
                 </div>
                 
                 <!-- بخش خروجی JSON -->
@@ -971,35 +970,19 @@
                 <div class="form-group">
                     <label>امتیازات دلخواه این جلسه:</label>
                     <div class="dynamic-list" id="customSessionScores">
-                        <button type="button" onclick="addCustomSessionScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button>
+                        <button type="button" onclick="addCustomScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button>
                     </div>
                 </div>
                 
-                <div class="score-display" id="modalScore">
-                    امتیاز کل: 0
+                <div class="score-display" id="totalScoreDisplay">امتیاز کل: 0</div>
+                
+                <div class="form-group">
+                    <label>یادداشت‌ها:</label>
+                    <textarea id="modalNotes" rows="4"></textarea>
                 </div>
                 
-                <button type="button" onclick="saveStudentDetails()" class="btn btn-success">ذخیره</button>
+                <button type="button" onclick="saveStudentDetails()" class="btn btn-success">ذخیره تغییرات</button>
             </form>
-        </div>
-    </div>
-    
-    <!-- مودال خروجی JSON -->
-    <div id="exportModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('exportModal')">&times;</span>
-            <h2>خروجی گرفتن اطلاعات به صورت JSON</h2>
-            
-            <div class="form-group">
-                <label>اطلاعات JSON:</label>
-                <textarea id="jsonOutput" readonly style="min-height: 300px;"></textarea>
-            </div>
-            
-            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="exportToJSON()" class="btn btn-warning">دانلود فایل JSON</button>
-                <button onclick="copyJSON()" class="btn btn-info">کپی JSON</button>
-                <button onclick="closeModal('exportModal')" class="btn btn-danger">بستن</button>
-            </div>
         </div>
     </div>
     
@@ -1008,249 +991,668 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('importModal')">&times;</span>
             <h2>وارد کردن اطلاعات از JSON</h2>
-            
-            <div class="form-group">
-                <label>انتخاب فایل JSON:</label>
-                <input type="file" id="jsonFileInput" class="file-input" accept=".json">
-                <label for="jsonFileInput" class="file-label">انتخاب فایل JSON</label>
-                <span id="fileName" style="margin-right: 10px; color: #666;">هیچ فایلی انتخاب نشده</span>
-            </div>
-            
-            <div class="form-group">
-                <label>یا مستقیماً JSON را در کادر زیر وارد کنید:</label>
-                <textarea id="jsonInput" placeholder='{"classes": [], "sessions": [], "students": [], "attendance": {}, "studentDetails": {}}' style="min-height: 250px;"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>نوع عملیات:</label>
-                <select id="importType" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
-                    <option value="replace">جایگزینی کامل اطلاعات فعلی</option>
-                    <option value="merge">ادغام با اطلاعات فعلی</option>
-                </select>
-            </div>
-            
-            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="importFromJSON()" class="btn btn-success">وارد کردن اطلاعات</button>
+            <p style="margin-bottom: 15px; color: #666;">اطلاعات JSON را در کادر زیر وارد کنید:</p>
+            <textarea id="importJson" rows="15" style="width: 100%; padding: 15px; border: 2px solid #e3f2fd; border-radius: 12px; font-family: monospace; font-size: 14px; background: rgba(255, 255, 255, 0.8);"></textarea>
+            <div style="margin-top: 20px; text-align: center;">
+                <button onclick="importFromJson()" class="btn btn-success">وارد کردن اطلاعات</button>
                 <button onclick="closeModal('importModal')" class="btn btn-danger">انصراف</button>
             </div>
         </div>
     </div>
-
-    <!-- مودال وارد کردن Excel -->
-    <div id="excelImportModal" class="modal">
+    
+    <!-- مودال خروجی JSON -->
+    <div id="exportModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeModal('excelImportModal')">&times;</span>
-            <h2>وارد کردن اطلاعات از Excel</h2>
-            
-            <div class="form-group">
-                <label>انتخاب فایل Excel:</label>
-                <input type="file" id="excelFileInput" class="file-input" accept=".xlsx, .xls">
-                <label for="excelFileInput" class="file-label">انتخاب فایل Excel</label>
-                <span id="excelFileName" style="margin-right: 10px; color: #666;">هیچ فایلی انتخاب نشده</span>
-            </div>
-            
-            <div class="form-group">
-                <label>کلاس مقصد:</label>
-                <select id="excelTargetClass" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
-                    <option value="">-- انتخاب کلاس --</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>نوع عملیات:</label>
-                <select id="excelImportType" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
-                    <option value="replace">جایگزینی کامل اطلاعات فعلی</option>
-                    <option value="merge">ادغام با اطلاعات فعلی</option>
-                </select>
-            </div>
-            
-            <div id="excelImportPreview" style="margin: 20px 0; display: none;">
-                <h4>پیش‌نمایش داده‌ها:</h4>
-                <div id="previewContent" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; max-height: 300px; overflow-y: auto;"></div>
-            </div>
-            
-            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="importFromExcel()" class="btn btn-success">وارد کردن اطلاعات</button>
-                <button onclick="closeModal('excelImportModal')" class="btn btn-danger">انصراف</button>
+            <span class="close" onclick="closeModal('exportModal')">&times;</span>
+            <h2>خروجی گرفتن اطلاعات به صورت JSON</h2>
+            <p style="margin-bottom: 15px; color: #666;">می‌توانید تمام اطلاعات را کپی کرده و ذخیره کنید:</p>
+            <textarea id="exportJson" rows="15" style="width: 100%; padding: 15px; border: 2px solid #e3f2fd; border-radius: 12px; font-family: monospace; font-size: 14px; background: rgba(255, 255, 255, 0.8);" readonly></textarea>
+            <div style="margin-top: 20px; text-align: center;">
+                <button onclick="copyToClipboard()" class="btn btn-success">کپی به کلیپ‌بورد</button>
+                <button onclick="closeModal('exportModal')" class="btn btn-danger">بستن</button>
             </div>
         </div>
     </div>
-
+    
+    <!-- ورودی فایل اکسل -->
+    <input type="file" id="excelFileInput" class="file-input" accept=".xlsx, .xls">
+    
     <script>
-        let scoreConfig = {
-            isMarried: 1,
-            hasChild: 1,
-            hasJob: 1,
-            hasAchievement: 1,
-            noClassNotes: -0.25,
-            noHomework: -1,
-            writesNotes: 0.25,
-            extraClasses: 1,
-            motahhariStudy: 1,
-            absent: -1,
-            series: 3,
-            movie: 1,
-            shortBook: 3
-        };
-
-        let classes = [];
-        let sessions = [];
-        let students = [];
-        let attendance = {};
-        let studentDetails = {};
-        let currentSessionId = null;
-        let currentClassId = null;
+        // داده‌های اولیه
+        let classes = JSON.parse(localStorage.getItem('classes')) || [];
+        let students = JSON.parse(localStorage.getItem('students')) || [];
+        let sessions = JSON.parse(localStorage.getItem('sessions')) || [];
+        let attendance = JSON.parse(localStorage.getItem('attendance')) || [];
         
-        // Add these functions for Persian name processing and sorting
-        function formatNameForDisplay(fullName) {
-            if (!fullName || typeof fullName !== 'string') return fullName;
-            
-            const nameParts = fullName.trim().split(' ').filter(part => part.trim() !== '');
-            
-            if (nameParts.length <= 1) {
-                return fullName;
-            }
-            
-            // Assume last word is last name, rest is first name
-            const lastName = nameParts.pop();
-            const firstName = nameParts.join(' ');
-            
-            return `${lastName}، ${firstName}`;
-        }
-
-        function formatNameForStorage(displayName) {
-            if (!displayName || typeof displayName !== 'string') return displayName;
-            
-            // Convert "احمدی، علی" back to "علی احمدی"
-            if (displayName.includes('،')) {
-                const parts = displayName.split('،').map(part => part.trim());
-                if (parts.length === 2) {
-                    return `${parts[1]} ${parts[0]}`;
-                }
-            }
-            
-            return displayName;
-        }
-
-        function sortStudentsAlphabetically(studentsList) {
-            return studentsList.sort((a, b) => {
-                const nameA = formatNameForDisplay(a.name).toLowerCase();
-                const nameB = formatNameForDisplay(b.name).toLowerCase();
-                return nameA.localeCompare(nameB, 'fa');
+        // تابع برای مرتب‌سازی اسامی بر اساس الفبای فارسی
+        function sortPersianNames(names) {
+            return names.sort((a, b) => {
+                return a.localeCompare(b, 'fa');
             });
         }
         
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
-            renderClasses();
-            renderClassSelectors();
-            renderSessions();
-            renderStudents();
-            renderAttendance();
-            renderStats();
-            
-            const today = new Date();
-            const persianToday = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
-            document.getElementById('sessionDate').value = `${persianToday[0]}/${String(persianToday[1]).padStart(2, '0')}/${String(persianToday[2]).padStart(2, '0')}`;
-            
-            document.getElementById('classForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addClass();
-            });
-            
-            document.getElementById('sessionForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addSession();
-            });
-            
-            document.getElementById('studentForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                addStudent();
-            });
-            
-            // مدیریت انتخاب فایل JSON
-            document.getElementById('jsonFileInput').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    document.getElementById('fileName').textContent = file.name;
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        try {
-                            const jsonData = JSON.parse(e.target.result);
-                            document.getElementById('jsonInput').value = JSON.stringify(jsonData, null, 2);
-                        } catch (error) {
-                            alert('خطا در خواندن فایل JSON: ' + error.message);
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            });
-
-            // Add Excel file input event listener
-            document.getElementById('excelFileInput').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    document.getElementById('excelFileName').textContent = file.name;
-                    previewExcelData(file);
-                }
-            });
-        });
+        // تابع برای ذخیره داده‌ها در localStorage
+        function saveData() {
+            localStorage.setItem('classes', JSON.stringify(classes));
+            localStorage.setItem('students', JSON.stringify(students));
+            localStorage.setItem('sessions', JSON.stringify(sessions));
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+        }
         
+        // تابع برای نمایش تب‌ها
         function showTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            // مخفی کردن همه تب‌ها
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
             
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            // غیرفعال کردن همه دکمه‌های تب
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
             
+            // نمایش تب انتخاب شده
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
             
-            if (tabName === 'attendance') {
+            // پیدا کردن دکمه تب مربوطه و فعال کردن آن
+            const tabButtons = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabButtons.length; i++) {
+                if (tabButtons[i].textContent.trim() === getTabName(tabName)) {
+                    tabButtons[i].classList.add('active');
+                    break;
+                }
+            }
+            
+            // رندر کردن محتوای تب
+            if (tabName === 'classes') {
+                renderClasses();
+            } else if (tabName === 'sessions') {
+                renderClassSelectors();
+                renderSessions();
+            } else if (tabName === 'students') {
+                renderClassSelectors();
+                renderStudents();
+            } else if (tabName === 'attendance') {
+                renderClassSelectors();
                 renderAttendance();
             } else if (tabName === 'reports') {
+                renderClassSelectors();
                 renderStats();
             }
         }
         
-        function openExportModal() {
-            updateJSONOutput();
-            document.getElementById('exportModal').style.display = 'block';
+        // تابع برای دریافت نام فارسی تب
+        function getTabName(tabId) {
+            const tabNames = {
+                'classes': 'کلاس‌ها',
+                'sessions': 'جلسات',
+                'students': 'دانشجویان',
+                'attendance': 'حضور و غیاب',
+                'reports': 'گزارشات'
+            };
+            return tabNames[tabId] || tabId;
         }
         
-        function openImportModal() {
-            document.getElementById('importModal').style.display = 'block';
-        }
-
-        function openExcelImportModal() {
-            document.getElementById('excelImportModal').style.display = 'block';
-            document.getElementById('excelImportPreview').style.display = 'none';
-            document.getElementById('excelFileInput').value = '';
-            document.getElementById('excelFileName').textContent = 'هیچ فایلی انتخاب نشده';
+        // تابع برای رندر کردن کلاس‌ها
+        function renderClasses() {
+            const classesList = document.getElementById('classesList');
             
-            // پر کردن لیست کلاس‌ها برای انتخاب
-            const classSelect = document.getElementById('excelTargetClass');
-            classSelect.innerHTML = '<option value="">-- انتخاب کلاس --</option>';
-            classes.forEach(cls => {
-                classSelect.innerHTML += `<option value="${cls.id}">${cls.name}</option>`;
+            if (classes.length === 0) {
+                classesList.innerHTML = '<div class="empty-state">هنوز کلاسی اضافه نشده است.</div>';
+                return;
+            }
+            
+            let html = '';
+            classes.forEach((cls, index) => {
+                html += `
+                <div class="class-item">
+                    <div class="class-header">
+                        <div class="class-name">${cls.name}</div>
+                        <div>
+                            <button onclick="editClass(${index})" class="btn btn-warning">ویرایش</button>
+                            <button onclick="deleteClass(${index})" class="btn btn-danger">حذف</button>
+                        </div>
+                    </div>
+                    <p><strong>توضیحات:</strong> ${cls.description || 'بدون توضیحات'}</p>
+                    <p><strong>تعداد دانشجویان:</strong> ${students.filter(s => s.classId === cls.id).length}</p>
+                    <p><strong>تعداد جلسات:</strong> ${sessions.filter(s => s.classId === cls.id).length}</p>
+                </div>
+                `;
+            });
+            
+            classesList.innerHTML = html;
+        }
+        
+        // تابع برای رندر کردن جلسات
+        function renderSessions() {
+            const sessionsList = document.getElementById('sessionsList');
+            const classId = document.getElementById('sessionClass').value;
+            
+            if (!classId) {
+                sessionsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید.</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(s => s.classId === classId);
+            
+            if (classSessions.length === 0) {
+                sessionsList.innerHTML = '<div class="empty-state">هنوز جلسه‌ای برای این کلاس اضافه نشده است.</div>';
+                return;
+            }
+            
+            let html = '';
+            classSessions.forEach((session, index) => {
+                html += `
+                <div class="session-item">
+                    <div class="session-header">
+                        <div class="session-title">${session.title}</div>
+                        <div>
+                            <button onclick="editSession(${index})" class="btn btn-warning">ویرایش</button>
+                            <button onclick="deleteSession(${index})" class="btn btn-danger">حذف</button>
+                        </div>
+                    </div>
+                    <p><strong>تاریخ:</strong> ${session.date}</p>
+                    <p><strong>توضیحات:</strong> ${session.description || 'بدون توضیحات'}</p>
+                </div>
+                `;
+            });
+            
+            sessionsList.innerHTML = html;
+        }
+        
+        // تابع برای رندر کردن دانشجویان
+        function renderStudents() {
+            const studentsList = document.getElementById('studentsList');
+            const classId = document.getElementById('studentClass').value;
+            
+            if (!classId) {
+                studentsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید.</div>';
+                return;
+            }
+            
+            const classStudents = students.filter(s => s.classId === classId);
+            
+            if (classStudents.length === 0) {
+                studentsList.innerHTML = '<div class="empty-state">هنوز دانشجویی برای این کلاس اضافه نشده است.</div>';
+                return;
+            }
+            
+            // مرتب‌سازی اسامی بر اساس الفبای فارسی
+            const sortedStudents = sortPersianNames(classStudents.map(s => s.name)).map(name => 
+                classStudents.find(s => s.name === name)
+            );
+            
+            let html = '';
+            sortedStudents.forEach((student, index) => {
+                const studentIndex = students.findIndex(s => s.id === student.id);
+                const totalScore = calculateTotalScore(student);
+                
+                html += `
+                <div class="student-item">
+                    <div class="student-header">
+                        <div class="student-name">${student.name}</div>
+                        <div>
+                            <span class="score-badge">${totalScore} امتیاز</span>
+                            <button onclick="openStudentModal(${studentIndex})" class="btn btn-info">جزئیات</button>
+                            <button onclick="deleteStudent(${studentIndex})" class="btn btn-danger">حذف</button>
+                        </div>
+                    </div>
+                    <p><strong>یادداشت‌ها:</strong> ${student.notes || 'بدون یادداشت'}</p>
+                </div>
+                `;
+            });
+            
+            studentsList.innerHTML = html;
+        }
+        
+        // تابع برای رندر کردن حضور و غیاب
+        function renderAttendance() {
+            const attendanceContent = document.getElementById('attendanceContent');
+            const classId = document.getElementById('attendanceClass').value;
+            
+            if (!classId) {
+                attendanceContent.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید.</div>';
+                return;
+            }
+            
+            const classStudents = students.filter(s => s.classId === classId);
+            const classSessions = sessions.filter(s => s.classId === classId);
+            
+            if (classStudents.length === 0) {
+                attendanceContent.innerHTML = '<div class="empty-state">هنوز دانشجویی برای این کلاس اضافه نشده است.</div>';
+                return;
+            }
+            
+            if (classSessions.length === 0) {
+                attendanceContent.innerHTML = '<div class="empty-state">هنوز جلسه‌ای برای این کلاس اضافه نشده است.</div>';
+                return;
+            }
+            
+            // مرتب‌سازی اسامی بر اساس الفبای فارسی
+            const sortedStudents = sortPersianNames(classStudents.map(s => s.name)).map(name => 
+                classStudents.find(s => s.name === name)
+            );
+            
+            let html = '<h3 style="margin-bottom: 20px;">ثبت حضور و غیاب</h3>';
+            
+            // انتخاب جلسه
+            html += `
+            <div class="form-group">
+                <label>انتخاب جلسه:</label>
+                <select id="attendanceSession" onchange="renderAttendanceList()" style="margin-bottom: 20px;">
+                    <option value="">-- انتخاب کنید --</option>
+                    ${classSessions.map(session => `<option value="${session.id}">${session.title} (${session.date})</option>`).join('')}
+                </select>
+            </div>
+            `;
+            
+            html += '<div id="attendanceList"></div>';
+            
+            attendanceContent.innerHTML = html;
+        }
+        
+        // تابع برای رندر لیست حضور و غیاب
+        function renderAttendanceList() {
+            const attendanceList = document.getElementById('attendanceList');
+            const sessionId = document.getElementById('attendanceSession').value;
+            const classId = document.getElementById('attendanceClass').value;
+            
+            if (!sessionId) {
+                attendanceList.innerHTML = '';
+                return;
+            }
+            
+            const classStudents = students.filter(s => s.classId === classId);
+            
+            // مرتب‌سازی اسامی بر اساس الفبای فارسی
+            const sortedStudents = sortPersianNames(classStudents.map(s => s.name)).map(name => 
+                classStudents.find(s => s.name === name)
+            );
+            
+            let html = '<div class="attendance-list">';
+            
+            sortedStudents.forEach(student => {
+                const isPresent = attendance.some(a => a.studentId === student.id && a.sessionId === sessionId);
+                
+                html += `
+                <div class="attendance-item">
+                    <input type="checkbox" id="attendance_${student.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendance('${student.id}', '${sessionId}', this.checked)">
+                    <label for="attendance_${student.id}" class="student-name-clickable" onclick="openStudentModal(${students.findIndex(s => s.id === student.id)})">${student.name}</label>
+                </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            attendanceList.innerHTML = html;
+        }
+        
+        // تابع برای رندر آمار و گزارشات
+        function renderStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            const classId = document.getElementById('reportClass').value;
+            
+            if (!classId) {
+                statsGrid.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید.</div>';
+                return;
+            }
+            
+            const classStudents = students.filter(s => s.classId === classId);
+            const classSessions = sessions.filter(s => s.classId === classId);
+            
+            if (classStudents.length === 0) {
+                statsGrid.innerHTML = '<div class="empty-state">هنوز دانشجویی برای این کلاس اضافه نشده است.</div>';
+                return;
+            }
+            
+            // محاسبه آمار
+            const totalStudents = classStudents.length;
+            const totalSessions = classSessions.length;
+            
+            // محاسبه میانگین امتیاز
+            let totalScoreSum = 0;
+            classStudents.forEach(student => {
+                totalScoreSum += calculateTotalScore(student);
+            });
+            const averageScore = totalScoreSum / totalStudents;
+            
+            // محاسبه تعداد حضورها
+            let totalAttendances = 0;
+            classSessions.forEach(session => {
+                totalAttendances += attendance.filter(a => a.sessionId === session.id).length;
+            });
+            
+            // محاسبه میانگین حضور
+            const averageAttendance = totalAttendances / totalSessions;
+            
+            let html = `
+            <div class="stat-card">
+                <div class="stat-number">${totalStudents}</div>
+                <div class="stat-label">تعداد دانشجویان</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${totalSessions}</div>
+                <div class="stat-label">تعداد جلسات</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${averageScore.toFixed(1)}</div>
+                <div class="stat-label">میانگین امتیاز</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${averageAttendance.toFixed(1)}</div>
+                <div class="stat-label">میانگین حضور</div>
+            </div>
+            `;
+            
+            statsGrid.innerHTML = html;
+        }
+        
+        // تابع برای رندر کردن انتخاب‌گرهای کلاس
+        function renderClassSelectors() {
+            const classSelectors = document.querySelectorAll('select[id$="Class"]');
+            
+            classSelectors.forEach(selector => {
+                let html = '<option value="">-- انتخاب کنید --</option>';
+                
+                classes.forEach(cls => {
+                    html += `<option value="${cls.id}">${cls.name}</option>`;
+                });
+                
+                selector.innerHTML = html;
             });
         }
         
+        // تابع برای محاسبه امتیاز کل دانشجو
+        function calculateTotalScore(student) {
+            let totalScore = 0;
+            
+            // امتیازات ثابت
+            if (student.isMarried) totalScore += student.isMarriedPoints || 0;
+            if (student.hasChild) totalScore += student.hasChildPoints || 0;
+            if (student.hasJob) totalScore += student.hasJobPoints || 0;
+            if (student.hasAchievement) totalScore += student.hasAchievementPoints || 0;
+            
+            // امتیازات جلسات
+            if (student.sessionScores) {
+                Object.values(student.sessionScores).forEach(score => {
+                    totalScore += score;
+                });
+            }
+            
+            // امتیازات دلخواه جلسات
+            if (student.customSessionScores) {
+                Object.values(student.customSessionScores).forEach(score => {
+                    totalScore += score;
+                });
+            }
+            
+            return totalScore;
+        }
+        
+        // تابع برای باز کردن مودال جزئیات دانشجو
+        function openStudentModal(studentIndex) {
+            const student = students[studentIndex];
+            document.getElementById('modalStudentId').value = studentIndex;
+            document.getElementById('modalStudentName').value = student.name;
+            document.getElementById('modalStudentCode').value = student.studentCode || '';
+            document.getElementById('modalCity').value = student.city || '';
+            document.getElementById('modalMajor').value = student.major || '';
+            document.getElementById('modalMinor').value = student.minor || '';
+            document.getElementById('modalNotes').value = student.notes || '';
+            
+            // تنظیم وضعیت امتیازات ثابت
+            document.getElementById('modalIsMarried').checked = student.isMarried || false;
+            document.getElementById('modalIsMarriedPoints').value = student.isMarriedPoints || '';
+            document.getElementById('modalHasChild').checked = student.hasChild || false;
+            document.getElementById('modalHasChildPoints').value = student.hasChildPoints || '';
+            document.getElementById('modalHasJob').checked = student.hasJob || false;
+            document.getElementById('modalHasJobPoints').value = student.hasJobPoints || '';
+            document.getElementById('modalHasAchievement').checked = student.hasAchievement || false;
+            document.getElementById('modalHasAchievementPoints').value = student.hasAchievementPoints || '';
+            
+            // رندر کردن کتاب‌ها
+            const booksList = document.getElementById('booksList');
+            booksList.innerHTML = '<button type="button" onclick="addBook()" class="btn btn-info">+ افزودن کتاب</button>';
+            
+            if (student.books && student.books.length > 0) {
+                student.books.forEach((book, index) => {
+                    booksList.innerHTML += `
+                    <div class="dynamic-item">
+                        <input type="text" value="${book}" onchange="updateStudentProperty('books', ${index}, this.value)" placeholder="نام کتاب">
+                        <button type="button" onclick="removeBook(${index})" class="btn btn-danger">حذف</button>
+                    </div>
+                    `;
+                });
+            }
+            
+            // رندر کردن فیلم‌ها
+            const moviesList = document.getElementById('moviesList');
+            moviesList.innerHTML = '<button type="button" onclick="addMovie()" class="btn btn-info">+ افزودن فیلم</button>';
+            
+            if (student.movies && student.movies.length > 0) {
+                student.movies.forEach((movie, index) => {
+                    moviesList.innerHTML += `
+                    <div class="dynamic-item">
+                        <input type="text" value="${movie}" onchange="updateStudentProperty('movies', ${index}, this.value)" placeholder="نام فیلم">
+                        <button type="button" onclick="removeMovie(${index})" class="btn btn-danger">حذف</button>
+                    </div>
+                    `;
+                });
+            }
+            
+            // رندر کردن سریال‌ها
+            const seriesList = document.getElementById('seriesList');
+            seriesList.innerHTML = '<button type="button" onclick="addSeries()" class="btn btn-info">+ افزودن سریال</button>';
+            
+            if (student.series && student.series.length > 0) {
+                student.series.forEach((series, index) => {
+                    seriesList.innerHTML += `
+                    <div class="dynamic-item">
+                        <input type="text" value="${series}" onchange="updateStudentProperty('series', ${index}, this.value)" placeholder="نام سریال">
+                        <button type="button" onclick="removeSeries(${index})" class="btn btn-danger">حذف</button>
+                    </div>
+                    `;
+                });
+            }
+            
+            // رندر کردن امتیازات دلخواه جلسات
+            const customSessionScores = document.getElementById('customSessionScores');
+            customSessionScores.innerHTML = '<button type="button" onclick="addCustomScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button>';
+            
+            if (student.customSessionScores) {
+                Object.keys(student.customSessionScores).forEach(key => {
+                    customSessionScores.innerHTML += `
+                    <div class="dynamic-item">
+                        <input type="text" value="${key}" onchange="updateCustomSessionScoreKey('${key}', this.value)" placeholder="عنوان امتیاز">
+                        <input type="number" value="${student.customSessionScores[key]}" onchange="updateCustomSessionScoreValue('${key}', this.value)" placeholder="امتیاز">
+                        <button type="button" onclick="removeCustomSessionScore('${key}')" class="btn btn-danger">حذف</button>
+                    </div>
+                    `;
+                });
+            }
+            
+            // به‌روزرسانی نمایش امتیاز کل
+            updateTotalScoreDisplay();
+            
+            // نمایش مودال
+            document.getElementById('studentModal').style.display = 'block';
+        }
+        
+        // تابع برای بستن مودال
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
         
-        function addClass() {
-            const name = document.getElementById('className').value;
-            const description = document.getElementById('classDescription').value;
+        // تابع برای افزودن کتاب
+        function addBook() {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            if (!students[studentIndex].books) {
+                students[studentIndex].books = [];
+            }
+            students[studentIndex].books.push('');
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای حذف کتاب
+        function removeBook(index) {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            students[studentIndex].books.splice(index, 1);
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای افزودن فیلم
+        function addMovie() {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            if (!students[studentIndex].movies) {
+                students[studentIndex].movies = [];
+            }
+            students[studentIndex].movies.push('');
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای حذف فیلم
+        function removeMovie(index) {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            students[studentIndex].movies.splice(index, 1);
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای افزودن سریال
+        function addSeries() {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            if (!students[studentIndex].series) {
+                students[studentIndex].series = [];
+            }
+            students[studentIndex].series.push('');
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای حذف سریال
+        function removeSeries(index) {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            students[studentIndex].series.splice(index, 1);
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای افزودن امتیاز دلخواه
+        function addCustomScore() {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            if (!students[studentIndex].customSessionScores) {
+                students[studentIndex].customSessionScores = {};
+            }
+            const key = `امتیاز دلخواه ${Object.keys(students[studentIndex].customSessionScores).length + 1}`;
+            students[studentIndex].customSessionScores[key] = 0;
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای به‌روزرسانی کلید امتیاز دلخواه
+        function updateCustomSessionScoreKey(oldKey, newKey) {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            if (students[studentIndex].customSessionScores[oldKey] !== undefined) {
+                students[studentIndex].customSessionScores[newKey] = students[studentIndex].customSessionScores[oldKey];
+                delete students[studentIndex].customSessionScores[oldKey];
+                saveData();
+            }
+        }
+        
+        // تابع برای به‌روزرسانی مقدار امتیاز دلخواه
+        function updateCustomSessionScoreValue(key, value) {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            students[studentIndex].customSessionScores[key] = parseInt(value) || 0;
+            saveData();
+            updateTotalScoreDisplay();
+        }
+        
+        // تابع برای حذف امتیاز دلخواه
+        function removeCustomSessionScore(key) {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            delete students[studentIndex].customSessionScores[key];
+            saveData();
+            openStudentModal(parseInt(studentIndex));
+        }
+        
+        // تابع برای به‌روزرسانی ویژگی دانشجو
+        function updateStudentProperty(property, index, value) {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            students[studentIndex][property][index] = value;
+            saveData();
+        }
+        
+        // تابع برای به‌روزرسانی نمایش امتیاز کل
+        function updateTotalScoreDisplay() {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            const totalScore = calculateTotalScore(students[studentIndex]);
+            document.getElementById('totalScoreDisplay').textContent = `امتیاز کل: ${totalScore}`;
+        }
+        
+        // تابع برای ذخیره جزئیات دانشجو
+        function saveStudentDetails() {
+            const studentIndex = document.getElementById('modalStudentId').value;
+            const student = students[studentIndex];
+            
+            student.studentCode = document.getElementById('modalStudentCode').value;
+            student.city = document.getElementById('modalCity').value;
+            student.major = document.getElementById('modalMajor').value;
+            student.minor = document.getElementById('modalMinor').value;
+            student.notes = document.getElementById('modalNotes').value;
+            
+            // ذخیره وضعیت امتیازات ثابت
+            student.isMarried = document.getElementById('modalIsMarried').checked;
+            student.isMarriedPoints = parseInt(document.getElementById('modalIsMarriedPoints').value) || 0;
+            student.hasChild = document.getElementById('modalHasChild').checked;
+            student.hasChildPoints = parseInt(document.getElementById('modalHasChildPoints').value) || 0;
+            student.hasJob = document.getElementById('modalHasJob').checked;
+            student.hasJobPoints = parseInt(document.getElementById('modalHasJobPoints').value) || 0;
+            student.hasAchievement = document.getElementById('modalHasAchievement').checked;
+            student.hasAchievementPoints = parseInt(document.getElementById('modalHasAchievementPoints').value) || 0;
+            
+            saveData();
+            renderStudents();
+            closeModal('studentModal');
+            alert('تغییرات با موفقیت ذخیره شد.');
+        }
+        
+        // تابع برای به‌روزرسانی حضور و غیاب
+        function updateAttendance(studentId, sessionId, isPresent) {
+            if (isPresent) {
+                // اگر قبلاً ثبت نشده، اضافه کن
+                if (!attendance.some(a => a.studentId === studentId && a.sessionId === sessionId)) {
+                    attendance.push({
+                        studentId: studentId,
+                        sessionId: sessionId
+                    });
+                }
+            } else {
+                // اگر قبلاً ثبت شده، حذف کن
+                const index = attendance.findIndex(a => a.studentId === studentId && a.sessionId === sessionId);
+                if (index !== -1) {
+                    attendance.splice(index, 1);
+                }
+            }
+            
+            saveData();
+        }
+        
+        // تابع برای افزودن کلاس
+        document.getElementById('classForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const className = document.getElementById('className').value;
+            const classDescription = document.getElementById('classDescription').value;
             
             const newClass = {
-                id: Date.now(),
-                name,
-                description
+                id: generateId(),
+                name: className,
+                description: classDescription
             };
             
             classes.push(newClass);
@@ -1259,1690 +1661,446 @@
             renderClassSelectors();
             
             document.getElementById('classForm').reset();
-        }
+            alert('کلاس با موفقیت اضافه شد.');
+        });
         
-        function renderClasses() {
-            const classesList = document.getElementById('classesList');
+        // تابع برای افزودن جلسه
+        document.getElementById('sessionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            if (classes.length === 0) {
-                classesList.innerHTML = '<div class="empty-state">هنوز کلاسی اضافه نشده است</div>';
-                return;
-            }
-            
-            classesList.innerHTML = classes.map(cls => `
-                <div class="class-item">
-                    <div class="class-header">
-                        <div class="class-name">${cls.name}</div>
-                        <div>
-                            <button onclick="deleteClass(${cls.id})" class="btn btn-danger">حذف</button>
-                        </div>
-                    </div>
-                    <p><strong>توضیحات:</strong> ${cls.description}</p>
-                </div>
-            `).join('');
-        }
-        
-        function deleteClass(id) {
-            if (confirm('آیا از حذف این کلاس اطمینان دارید؟ تمام جلسات و دانشجویان این کلاس نیز حذف خواهند شد.')) {
-                // Remove the class
-                classes = classes.filter(cls => cls.id !== id);
-                
-                // Remove sessions for this class
-                sessions = sessions.filter(session => session.classId !== id);
-                
-                // Remove students for this class
-                students = students.filter(student => student.classId !== id);
-                
-                // Remove attendance records for this class
-                Object.keys(attendance).forEach(sessionId => {
-                    const session = sessions.find(s => s.id == sessionId);
-                    if (!session || session.classId === id) {
-                        delete attendance[sessionId];
-                    }
-                });
-                
-                // Remove student details for students in this class
-                Object.keys(studentDetails).forEach(studentId => {
-                    const student = students.find(s => s.id == studentId);
-                    if (!student || student.classId === id) {
-                        delete studentDetails[studentId];
-                    }
-                });
-                
-                saveData();
-                renderClasses();
-                renderClassSelectors();
-                renderSessions();
-                renderStudents();
-                renderAttendance();
-                renderStats();
-            }
-        }
-        
-        function renderClassSelectors() {
-            const classSelectors = [
-                'sessionClass',
-                'studentClass',
-                'attendanceClass',
-                'reportClass'
-            ];
-            
-            classSelectors.forEach(selectorId => {
-                const selector = document.getElementById(selectorId);
-                selector.innerHTML = '<option value="">-- انتخاب کنید --</option>' + 
-                    classes.map(cls => `<option value="${cls.id}">${cls.name}</option>`).join('');
-            });
-        }
-        
-        function addSession() {
+            const sessionTitle = document.getElementById('sessionTitle').value;
+            const sessionDate = document.getElementById('sessionDate').value;
+            const sessionDescription = document.getElementById('sessionDescription').value;
             const classId = document.getElementById('sessionClass').value;
+            
             if (!classId) {
-                alert('لطفاً یک کلاس انتخاب کنید');
+                alert('لطفاً یک کلاس انتخاب کنید.');
                 return;
             }
             
-            const title = document.getElementById('sessionTitle').value;
-            const date = document.getElementById('sessionDate').value;
-            const description = document.getElementById('sessionDescription').value;
-            
-            const session = {
-                id: Date.now(),
-                classId: parseInt(classId),
-                title,
-                date,
-                description
+            const newSession = {
+                id: generateId(),
+                classId: classId,
+                title: sessionTitle,
+                date: sessionDate,
+                description: sessionDescription
             };
             
-            sessions.push(session);
+            sessions.push(newSession);
             saveData();
             renderSessions();
             
             document.getElementById('sessionForm').reset();
-            
-            const today = new Date();
-            const persianToday = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
-            document.getElementById('sessionDate').value = `${persianToday[0]}/${String(persianToday[1]).padStart(2, '0')}/${String(persianToday[2]).padStart(2, '0')}`;
-        }
+            alert('جلسه با موفقیت اضافه شد.');
+        });
         
-        function renderSessions() {
-            const classId = document.getElementById('sessionClass').value;
-            currentClassId = classId;
-            const sessionsList = document.getElementById('sessionsList');
+        // تابع برای افزودن دانشجو
+        document.getElementById('studentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            if (!classId) {
-                sessionsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
-                return;
-            }
-            
-            const classSessions = sessions.filter(session => session.classId == classId);
-            
-            if (classSessions.length === 0) {
-                sessionsList.innerHTML = '<div class="empty-state">هنوز جلسه‌ای برای این کلاس اضافه نشده است</div>';
-                return;
-            }
-            
-            sessionsList.innerHTML = classSessions.map(session => `
-                <div class="session-item">
-                    <div class="session-header">
-                        <div class="session-title">${session.title}</div>
-                        <div>
-                            <button onclick="openSessionScoring(${session.id})" class="btn btn-info">امتیازدهی</button>
-                            <button onclick="deleteSession(${session.id})" class="btn btn-danger">حذف</button>
-                        </div>
-                    </div>
-                    <p><strong>تاریخ:</strong> ${session.date}</p>
-                    <p><strong>توضیحات:</strong> ${session.description}</p>
-                </div>
-            `).join('');
-        }
-        
-        function deleteSession(id) {
-            if (confirm('آیا از حذف این جلسه اطمینان دارید؟')) {
-                sessions = sessions.filter(session => session.id !== id);
-                if (attendance[id]) {
-                    delete attendance[id];
-                }
-                Object.keys(studentDetails).forEach(studentId => {
-                    if (studentDetails[studentId].sessionScores && studentDetails[studentId].sessionScores[id]) {
-                        delete studentDetails[studentId].sessionScores[id];
-                    }
-                });
-                saveData();
-                renderSessions();
-                renderAttendance();
-                renderStats();
-            }
-        }
-        
-        function openSessionScoring(sessionId) {
-            currentSessionId = sessionId;
-            showTab('attendance');
-            const session = sessions.find(s => s.id == sessionId);
-            if (session) {
-                document.getElementById('attendanceClass').value = session.classId;
-                renderAttendance();
-            }
-        }
-        
-        function addStudent() {
+            const studentName = document.getElementById('studentName').value;
+            const studentNotes = document.getElementById('studentNotes').value;
             const classId = document.getElementById('studentClass').value;
+            
             if (!classId) {
-                alert('لطفاً یک کلاس انتخاب کنید');
+                alert('لطفاً یک کلاس انتخاب کنید.');
                 return;
             }
             
-            let name = document.getElementById('studentName').value;
-            const notes = document.getElementById('studentNotes').value;
-            
-            // Store the name in the original format (don't format for storage here)
-            // The formatting will be applied only for display
-            
-            const student = {
-                id: Date.now(),
-                classId: parseInt(classId),
-                name: name, // Store as entered
-                notes
+            const newStudent = {
+                id: generateId(),
+                classId: classId,
+                name: studentName,
+                notes: studentNotes
             };
             
-            students.push(student);
+            students.push(newStudent);
             saveData();
             renderStudents();
             
             document.getElementById('studentForm').reset();
+            alert('دانشجو با موفقیت اضافه شد.');
+        });
+        
+        // تابع برای تولید ID یکتا
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
         
+        // تابع برای نمایش/مخفی کردن بخش افزودن گروهی
         function toggleBulkAdd() {
-            const bulkSection = document.getElementById('bulkAddSection');
-            if (bulkSection.style.display === 'none') {
-                bulkSection.style.display = 'block';
+            const bulkAddSection = document.getElementById('bulkAddSection');
+            if (bulkAddSection.style.display === 'none') {
+                bulkAddSection.style.display = 'block';
             } else {
-                bulkSection.style.display = 'none';
+                bulkAddSection.style.display = 'none';
             }
         }
         
+        // تابع برای افزودن گروهی دانشجویان
         function addBulkStudents() {
             const classId = document.getElementById('studentClass').value;
+            const bulkNames = document.getElementById('bulkStudentNames').value;
+            
             if (!classId) {
-                alert('لطفاً یک کلاس انتخاب کنید');
+                alert('لطفاً یک کلاس انتخاب کنید.');
                 return;
             }
             
-            const namesText = document.getElementById('bulkStudentNames').value;
-            if (!namesText.trim()) {
-                alert('لطفاً نام دانشجویان را وارد کنید');
+            if (!bulkNames.trim()) {
+                alert('لطفاً نام دانشجویان را وارد کنید.');
                 return;
             }
             
-            const names = namesText.split('\n').filter(name => name.trim() !== '');
+            const names = bulkNames.split('\n').filter(name => name.trim() !== '');
             
             names.forEach(name => {
-                const student = {
-                    id: Date.now() + Math.random(),
-                    classId: parseInt(classId),
-                    name: name.trim(), // Store as entered
+                const newStudent = {
+                    id: generateId(),
+                    classId: classId,
+                    name: name.trim(),
                     notes: ''
                 };
                 
-                students.push(student);
+                students.push(newStudent);
             });
             
             saveData();
             renderStudents();
             toggleBulkAdd();
-            
             document.getElementById('bulkStudentNames').value = '';
+            alert(`${names.length} دانشجو با موفقیت اضافه شدند.`);
         }
         
-        function renderStudents() {
+        // تابع برای حذف همه دانشجویان کلاس فعلی
+        function deleteAllStudents() {
             const classId = document.getElementById('studentClass').value;
-            currentClassId = classId;
-            const studentsList = document.getElementById('studentsList');
             
             if (!classId) {
-                studentsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                alert('لطفاً یک کلاس انتخاب کنید.');
                 return;
             }
             
-            let classStudents = students.filter(student => student.classId == classId);
-            
-            // Sort students alphabetically
-            classStudents = sortStudentsAlphabetically(classStudents);
-            
-            if (classStudents.length === 0) {
-                studentsList.innerHTML = '<div class="empty-state">هنوز دانشجویی برای این کلاس اضافه نشده است</div>';
-                return;
+            if (confirm('آیا از حذف همه دانشجویان این کلاس اطمینان دارید؟ این عمل قابل بازگشت نیست.')) {
+                students = students.filter(s => s.classId !== classId);
+                saveData();
+                renderStudents();
+                alert('همه دانشجویان این کلاس حذف شدند.');
             }
-            
-            studentsList.innerHTML = classStudents.map(student => {
-                const totalScore = calculateStudentScore(student.id);
-                const displayName = formatNameForDisplay(student.name);
-                
-                return `
-                    <div class="student-item">
-                        <div class="student-header">
-                            <div class="student-name">${displayName}</div>
-                            <div>
-                                <button onclick="editStudent(${student.id})" class="btn btn-primary">ویرایش</button>
-                                <button onclick="deleteStudent(${student.id})" class="btn btn-danger">حذف</button>
-                            </div>
-                        </div>
-                        <p><strong>توضیحات:</strong> ${student.notes}</p>
-                        <p><strong>امتیاز کل:</strong> <span class="score-badge">${totalScore.toFixed(2)}</span></p>
-                    </div>
-                `;
-            }).join('');
         }
         
-        function deleteStudent(id) {
-            if (confirm('آیا از حذف این دانشجو اطمینان دارید؟')) {
-                students = students.filter(student => student.id !== id);
-                delete studentDetails[id];
+        // تابع برای حذف کلاس
+        function deleteClass(index) {
+            if (confirm('آیا از حذف این کلاس اطمینان دارید؟ تمام دانشجویان و جلسات مربوطه نیز حذف خواهند شد.')) {
+                const classId = classes[index].id;
                 
-                Object.keys(attendance).forEach(sessionId => {
-                    if (attendance[sessionId][id]) {
-                        delete attendance[sessionId][id];
-                    }
-                });
+                // حذف دانشجویان مربوطه
+                students = students.filter(s => s.classId !== classId);
+                
+                // حذف جلسات مربوطه
+                sessions = sessions.filter(s => s.classId !== classId);
+                
+                // حذف کلاس
+                classes.splice(index, 1);
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                alert('کلاس با موفقیت حذف شد.');
+            }
+        }
+        
+        // تابع برای حذف جلسه
+        function deleteSession(index) {
+            if (confirm('آیا از حذف این جلسه اطمینان دارید؟')) {
+                const sessionId = sessions[index].id;
+                
+                // حذف حضور و غیاب مربوطه
+                attendance = attendance.filter(a => a.sessionId !== sessionId);
+                
+                // حذف جلسه
+                sessions.splice(index, 1);
+                
+                saveData();
+                renderSessions();
+                alert('جلسه با موفقیت حذف شد.');
+            }
+        }
+        
+        // تابع برای حذف دانشجو
+        function deleteStudent(index) {
+            if (confirm('آیا از حذف این دانشجو اطمینان دارید؟')) {
+                const studentId = students[index].id;
+                
+                // حذف حضور و غیاب مربوطه
+                attendance = attendance.filter(a => a.studentId !== studentId);
+                
+                // حذف دانشجو
+                students.splice(index, 1);
                 
                 saveData();
                 renderStudents();
-                renderAttendance();
-                renderStats();
+                alert('دانشجو با موفقیت حذف شد.');
             }
         }
         
-        function deleteAllStudents() {
-            const classId = document.getElementById('studentClass').value;
-            if (!classId) {
-                alert('لطفاً یک کلاس انتخاب کنید');
-                return;
-            }
+        // تابع برای ویرایش کلاس
+        function editClass(index) {
+            const cls = classes[index];
+            const newName = prompt('نام جدید کلاس را وارد کنید:', cls.name);
             
-            const classStudents = students.filter(student => student.classId == classId);
-            
-            if (classStudents.length === 0) {
-                alert('هیچ دانشجویی برای حذف وجود ندارد');
-                return;
-            }
-            
-            const confirmation = confirm(`⚠️ هشدار!\n\nآیا از حذف تمام ${classStudents.length} دانشجو در این کلاس اطمینان دارید؟\n\nتمام اطلاعات دانشجویان شامل امتیازات، حضور و غیاب و جزئیات آنها پاک خواهد شد.\n\nاین عملیات قابل بازگشت نیست!`);
-            
-            if (confirmation) {
-                const secondConfirmation = confirm('آیا واقعاً مطمئن هستید؟\n\nاین آخرین فرصت برای انصراف است.');
+            if (newName && newName.trim() !== '') {
+                cls.name = newName.trim();
+                const newDescription = prompt('توضیحات جدید کلاس را وارد کنید:', cls.description || '');
+                cls.description = newDescription || '';
                 
-                if (secondConfirmation) {
-                    // Remove students for this class
-                    students = students.filter(student => student.classId != classId);
-                    
-                    // Remove student details for students in this class
-                    Object.keys(studentDetails).forEach(studentId => {
-                        const student = students.find(s => s.id == studentId);
-                        if (!student) {
-                            delete studentDetails[studentId];
-                        }
-                    });
-                    
-                    // Remove attendance records for students in this class
-                    Object.keys(attendance).forEach(sessionId => {
-                        const session = sessions.find(s => s.id == sessionId);
-                        if (session && session.classId == classId) {
-                            delete attendance[sessionId];
-                        } else {
-                            Object.keys(attendance[sessionId]).forEach(studentId => {
-                                const student = students.find(s => s.id == studentId);
-                                if (!student) {
-                                    delete attendance[sessionId][studentId];
-                                }
-                            });
-                        }
-                    });
-                    
-                    saveData();
-                    renderStudents();
-                    renderAttendance();
-                    renderStats();
-                    
-                    alert('✓ تمام دانشجویان این کلاس با موفقیت حذف شدند');
-                }
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                alert('کلاس با موفقیت ویرایش شد.');
             }
         }
         
-        function editStudent(id) {
-            const student = students.find(s => s.id === id);
-            if (!student) return;
+        // تابع برای ویرایش جلسه
+        function editSession(index) {
+            const session = sessions[index];
+            const newTitle = prompt('عنوان جدید جلسه را وارد کنید:', session.title);
             
-            const studentDetail = studentDetails[id] || {
-                books: [],
-                movies: [],
-                series: [],
-                studentCode: '',
-                city: '',
-                major: '',
-                minor: '',
-                isMarried: false,
-                hasChild: false,
-                hasJob: false,
-                hasAchievement: false,
-                sessionScores: {}
-            };
-            
-            document.getElementById('modalStudentId').value = id;
-            document.getElementById('modalStudentName').value = student.name;
-            document.getElementById('modalStudentCode').value = studentDetail.studentCode || '';
-            document.getElementById('modalCity').value = studentDetail.city || '';
-            document.getElementById('modalMajor').value = studentDetail.major || '';
-            document.getElementById('modalMinor').value = studentDetail.minor || '';
-            document.getElementById('modalIsMarried').checked = studentDetail.isMarried || false;
-            document.getElementById('modalHasChild').checked = studentDetail.hasChild || false;
-            document.getElementById('modalHasJob').checked = studentDetail.hasJob || false;
-            document.getElementById('modalHasAchievement').checked = studentDetail.hasAchievement || false;
-            
-            document.getElementById('modalIsMarriedPoints').value = studentDetail.isMarriedPoints || scoreConfig.isMarried;
-            document.getElementById('modalHasChildPoints').value = studentDetail.hasChildPoints || scoreConfig.hasChild;
-            document.getElementById('modalHasJobPoints').value = studentDetail.hasJobPoints || scoreConfig.hasJob;
-            document.getElementById('modalHasAchievementPoints').value = studentDetail.hasAchievementPoints || scoreConfig.hasAchievement;
-            
-            renderBooksList(studentDetail.books || []);
-            renderMoviesList(studentDetail.movies || []);
-            renderSeriesList(studentDetail.series || []);
-            renderCurrentSessionScores(id);
-            renderCustomSessionScores(id);
-            
-            updateModalScore(id);
-            
-            document.getElementById('studentModal').style.display = 'block';
-        }
-        
-        function renderBooksList(books) {
-            const booksList = document.getElementById('booksList');
-            booksList.innerHTML = '<button type="button" onclick="addBook()" class="btn btn-info">+ افزودن کتاب</button>';
-            
-            books.forEach((book, index) => {
-                const bookItem = document.createElement('div');
-                bookItem.className = 'dynamic-item';
-                bookItem.innerHTML = `
-                    <input type="text" placeholder="نام کتاب" value="${book.name}" onchange="updateBook(${index}, this.value)">
-                    <input type="number" placeholder="امتیاز" value="${book.points}" onchange="updateBookPoints(${index}, this.value)" style="width: 100px;">
-                    <button type="button" onclick="removeBook(${index})" class="btn btn-danger">حذف</button>
-                `;
-                booksList.appendChild(bookItem);
-            });
-        }
-        
-        function addBook() {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId] || {
-                books: [],
-                movies: [],
-                series: [],
-                studentCode: '',
-                city: '',
-                major: '',
-                minor: '',
-                isMarried: false,
-                hasChild: false,
-                hasJob: false,
-                hasAchievement: false,
-                sessionScores: {}
-            };
-            
-            studentDetail.books.push({ name: '', points: scoreConfig.shortBook });
-            studentDetails[studentId] = studentDetail;
-            renderBooksList(studentDetail.books);
-            updateModalScore(studentId);
-        }
-        
-        function updateBook(index, name) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail && studentDetail.books[index]) {
-                studentDetail.books[index].name = name;
-                updateModalScore(studentId);
-            }
-        }
-        
-        function updateBookPoints(index, points) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail && studentDetail.books[index]) {
-                studentDetail.books[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
-            }
-        }
-        
-        function removeBook(index) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail) {
-                studentDetail.books.splice(index, 1);
-                renderBooksList(studentDetail.books);
-                updateModalScore(studentId);
-            }
-        }
-        
-        function renderMoviesList(movies) {
-            const moviesList = document.getElementById('moviesList');
-            moviesList.innerHTML = '<button type="button" onclick="addMovie()" class="btn btn-info">+ افزودن فیلم</button>';
-            
-            movies.forEach((movie, index) => {
-                const movieItem = document.createElement('div');
-                movieItem.className = 'dynamic-item';
-                movieItem.innerHTML = `
-                    <input type="text" placeholder="نام فیلم" value="${movie.name}" onchange="updateMovie(${index}, this.value)">
-                    <input type="number" placeholder="امتیاز" value="${movie.points}" onchange="updateMoviePoints(${index}, this.value)" style="width: 100px;">
-                    <button type="button" onclick="removeMovie(${index})" class="btn btn-danger">حذف</button>
-                `;
-                moviesList.appendChild(movieItem);
-            });
-        }
-        
-        function addMovie() {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId] || {
-                books: [],
-                movies: [],
-                series: [],
-                studentCode: '',
-                city: '',
-                major: '',
-                minor: '',
-                isMarried: false,
-                hasChild: false,
-                hasJob: false,
-                hasAchievement: false,
-                sessionScores: {}
-            };
-            
-            studentDetail.movies.push({ name: '', points: scoreConfig.movie });
-            studentDetails[studentId] = studentDetail;
-            renderMoviesList(studentDetail.movies);
-            updateModalScore(studentId);
-        }
-        
-        function updateMovie(index, name) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail && studentDetail.movies[index]) {
-                studentDetail.movies[index].name = name;
-                updateModalScore(studentId);
-            }
-        }
-        
-        function updateMoviePoints(index, points) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail && studentDetail.movies[index]) {
-                studentDetail.movies[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
-            }
-        }
-        
-        function removeMovie(index) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail) {
-                studentDetail.movies.splice(index, 1);
-                renderMoviesList(studentDetail.movies);
-                updateModalScore(studentId);
-            }
-        }
-        
-        function renderSeriesList(series) {
-            const seriesList = document.getElementById('seriesList');
-            seriesList.innerHTML = '<button type="button" onclick="addSeries()" class="btn btn-info">+ افزودن سریال</button>';
-            
-            series.forEach((seriesItem, index) => {
-                const seriesElement = document.createElement('div');
-                seriesElement.className = 'dynamic-item';
-                seriesElement.innerHTML = `
-                    <input type="text" placeholder="نام سریال" value="${seriesItem.name}" onchange="updateSeries(${index}, this.value)">
-                    <input type="number" placeholder="امتیاز" value="${seriesItem.points}" onchange="updateSeriesPoints(${index}, this.value)" style="width: 100px;">
-                    <button type="button" onclick="removeSeries(${index})" class="btn btn-danger">حذف</button>
-                `;
-                seriesList.appendChild(seriesElement);
-            });
-        }
-        
-        function addSeries() {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId] || {
-                books: [],
-                movies: [],
-                series: [],
-                studentCode: '',
-                city: '',
-                major: '',
-                minor: '',
-                isMarried: false,
-                hasChild: false,
-                hasJob: false,
-                hasAchievement: false,
-                sessionScores: {}
-            };
-            
-            studentDetail.series.push({ name: '', points: scoreConfig.series });
-            studentDetails[studentId] = studentDetail;
-            renderSeriesList(studentDetail.series);
-            updateModalScore(studentId);
-        }
-        
-        function updateSeries(index, name) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail && studentDetail.series[index]) {
-                studentDetail.series[index].name = name;
-                updateModalScore(studentId);
-            }
-        }
-        
-        function updateSeriesPoints(index, points) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail && studentDetail.series[index]) {
-                studentDetail.series[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
-            }
-        }
-        
-        function removeSeries(index) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            if (studentDetail) {
-                studentDetail.series.splice(index, 1);
-                renderSeriesList(studentDetail.series);
-                updateModalScore(studentId);
-            }
-        }
-        
-        function renderCurrentSessionScores(studentId) {
-            const currentSessionScores = document.getElementById('currentSessionScores');
-            
-            if (!currentSessionId || !sessions.find(s => s.id == currentSessionId)) {
-                currentSessionScores.innerHTML = '<p style="color: #999; font-style: italic;">برای امتیازدهی جلسه، از قسمت جلسات روی دکمه "امتیازدهی" کلیک کنید</p>';
-                return;
-            }
-            
-            const session = sessions.find(s => s.id == currentSessionId);
-            const studentDetail = studentDetails[studentId] || {};
-            const sessionScore = (studentDetail.sessionScores && studentDetail.sessionScores[currentSessionId]) || {
-                noClassNotes: false,
-                noHomework: false,
-                writesNotes: false,
-                extraClasses: false,
-                motahhariStudy: false
-            };
-            
-            currentSessionScores.innerHTML = `
-                <h4 style="margin-bottom: 12px; color: #667eea;">جلسه: ${session.title} (${session.date})</h4>
-                <div class="dynamic-list">
-                    <div class="checkbox-group">
-                        <label>نداشتن جزوه کلاس</label>
-                        <input type="checkbox" ${sessionScore.noClassNotes ? 'checked' : ''} onchange="updateCurrentSessionScore('noClassNotes', this.checked)">
-                        <input type="number" value="${sessionScore.noClassNotesPoints || scoreConfig.noClassNotes}" onchange="updateCurrentSessionScorePoints('noClassNotes', this.value)" style="width: 80px; margin-right: 10px;">
-                    </div>
-                    <div class="checkbox-group">
-                        <label>نداشتن تکلیف</label>
-                        <input type="checkbox" ${sessionScore.noHomework ? 'checked' : ''} onchange="updateCurrentSessionScore('noHomework', this.checked)">
-                        <input type="number" value="${sessionScore.noHomeworkPoints || scoreConfig.noHomework}" onchange="updateCurrentSessionScorePoints('noHomework', this.value)" style="width: 80px; margin-right: 10px;">
-                    </div>
-                    <div class="checkbox-group">
-                        <label>نوشتن جزوه در کلاس</label>
-                        <input type="checkbox" ${sessionScore.writesNotes ? 'checked' : ''} onchange="updateCurrentSessionScore('writesNotes', this.checked)">
-                        <input type="number" value="${sessionScore.writesNotesPoints || scoreConfig.writesNotes}" onchange="updateCurrentSessionScorePoints('writesNotes', this.value)" style="width: 80px; margin-right: 10px;">
-                    </div>
-                    <div class="checkbox-group">
-                        <label>کلاس‌های فوق‌العاده</label>
-                        <input type="checkbox" ${sessionScore.extraClasses ? 'checked' : ''} onchange="updateCurrentSessionScore('extraClasses', this.checked)">
-                        <input type="number" value="${sessionScore.extraClassesPoints || scoreConfig.extraClasses}" onchange="updateCurrentSessionScorePoints('extraClasses', this.value)" style="width: 80px; margin-right: 10px;">
-                    </div>
-                    <div class="checkbox-group">
-                        <label>مطالعه آثار مطهری</label>
-                        <input type="checkbox" ${sessionScore.motahhariStudy ? 'checked' : ''} onchange="updateCurrentSessionScore('motahhariStudy', this.checked)">
-                        <input type="number" value="${sessionScore.motahhariStudyPoints || scoreConfig.motahhariStudy}" onchange="updateCurrentSessionScorePoints('motahhariStudy', this.value)" style="width: 80px; margin-right: 10px;">
-                    </div>
-                </div>
-            `;
-        }
-        
-        function renderCustomSessionScores(studentId) {
-            const customScoresContainer = document.getElementById('customSessionScores');
-            
-            if (!currentSessionId || !sessions.find(s => s.id == currentSessionId)) {
-                customScoresContainer.innerHTML = '<button type="button" onclick="addCustomSessionScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button><p style="color: #999; font-style: italic; margin-top: 10px;">برای امتیازدهی جلسه، از قسمت جلسات روی دکمه "امتیازدهی" کلیک کنید</p>';
-                return;
-            }
-            
-            const studentDetail = studentDetails[studentId] || {};
-            const sessionScore = (studentDetail.sessionScores && studentDetail.sessionScores[currentSessionId]) || {};
-            const customScores = sessionScore.customScores || [];
-            
-            customScoresContainer.innerHTML = '<button type="button" onclick="addCustomSessionScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button>';
-            
-            customScores.forEach((customScore, index) => {
-                const scoreItem = document.createElement('div');
-                scoreItem.className = 'dynamic-item';
-                scoreItem.innerHTML = `
-                    <input type="text" placeholder="عنوان امتیاز (مثلاً: ارائه پروژه)" value="${customScore.label || ''}" onchange="updateCustomScoreLabel(${index}, this.value)" style="flex: 2;">
-                    <input type="number" placeholder="امتیاز" value="${customScore.points || 0}" onchange="updateCustomScorePoints(${index}, this.value)" style="width: 100px;">
-                    <button type="button" onclick="removeCustomScore(${index})" class="btn btn-danger">حذف</button>
-                `;
-                customScoresContainer.appendChild(scoreItem);
-            });
-        }
-        
-        function addCustomSessionScore() {
-            const studentId = document.getElementById('modalStudentId').value;
-            
-            if (!currentSessionId || !sessions.find(s => s.id == currentSessionId)) {
-                alert('لطفاً ابتدا از قسمت جلسات، یک جلسه را برای امتیازدهی انتخاب کنید');
-                return;
-            }
-            
-            if (!studentDetails[studentId]) {
-                studentDetails[studentId] = {
-                    books: [],
-                    movies: [],
-                    series: [],
-                    studentCode: '',
-                    city: '',
-                    major: '',
-                    minor: '',
-                    isMarried: false,
-                    hasChild: false,
-                    hasJob: false,
-                    hasAchievement: false,
-                    sessionScores: {}
-                };
-            }
-            
-            if (!studentDetails[studentId].sessionScores[currentSessionId]) {
-                studentDetails[studentId].sessionScores[currentSessionId] = {};
-            }
-            
-            if (!studentDetails[studentId].sessionScores[currentSessionId].customScores) {
-                studentDetails[studentId].sessionScores[currentSessionId].customScores = [];
-            }
-            
-            studentDetails[studentId].sessionScores[currentSessionId].customScores.push({
-                label: '',
-                points: 0
-            });
-            
-            renderCustomSessionScores(studentId);
-            updateModalScore(studentId);
-        }
-        
-        function updateCustomScoreLabel(index, label) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            
-            if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores[index]) {
-                studentDetail.sessionScores[currentSessionId].customScores[index].label = label;
-            }
-        }
-        
-        function updateCustomScorePoints(index, points) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            
-            if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores[index]) {
-                studentDetail.sessionScores[currentSessionId].customScores[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
-            }
-        }
-        
-        function removeCustomScore(index) {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId];
-            
-            if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores) {
-                studentDetail.sessionScores[currentSessionId].customScores.splice(index, 1);
-                renderCustomSessionScores(studentId);
-                updateModalScore(studentId);
-            }
-        }
-        
-        function updateCurrentSessionScore(field, value) {
-            const studentId = document.getElementById('modalStudentId').value;
-            if (!studentDetails[studentId]) {
-                studentDetails[studentId] = {
-                    books: [],
-                    movies: [],
-                    series: [],
-                    studentCode: '',
-                    city: '',
-                    major: '',
-                    minor: '',
-                    isMarried: false,
-                    hasChild: false,
-                    hasJob: false,
-                    hasAchievement: false,
-                    sessionScores: {}
-                };
-            }
-            
-            if (!studentDetails[studentId].sessionScores[currentSessionId]) {
-                studentDetails[studentId].sessionScores[currentSessionId] = {};
-            }
-            
-            studentDetails[studentId].sessionScores[currentSessionId][field] = value;
-            
-            const pointsField = field + 'Points';
-            if (!studentDetails[studentId].sessionScores[currentSessionId][pointsField]) {
-                studentDetails[studentId].sessionScores[currentSessionId][pointsField] = scoreConfig[field];
-            }
-            
-            updateModalScore(studentId);
-        }
-        
-        function updateCurrentSessionScorePoints(field, points) {
-            const studentId = document.getElementById('modalStudentId').value;
-            if (!studentDetails[studentId] || !studentDetails[studentId].sessionScores[currentSessionId]) return;
-            
-            studentDetails[studentId].sessionScores[currentSessionId][`${field}Points`] = parseFloat(points) || 0;
-            updateModalScore(studentId);
-        }
-        
-        function updateModalScore(studentId) {
-            const totalScore = calculateStudentScore(studentId);
-            document.getElementById('modalScore').textContent = `امتیاز کل: ${totalScore.toFixed(2)}`;
-        }
-        
-        function saveStudentDetails() {
-            const studentId = document.getElementById('modalStudentId').value;
-            const studentDetail = studentDetails[studentId] || {
-                books: [],
-                movies: [],
-                series: [],
-                studentCode: '',
-                city: '',
-                major: '',
-                minor: '',
-                isMarried: false,
-                hasChild: false,
-                hasJob: false,
-                hasAchievement: false,
-                sessionScores: {}
-            };
-            
-            studentDetail.studentCode = document.getElementById('modalStudentCode').value;
-            studentDetail.city = document.getElementById('modalCity').value;
-            studentDetail.major = document.getElementById('modalMajor').value;
-            studentDetail.minor = document.getElementById('modalMinor').value;
-            studentDetail.isMarried = document.getElementById('modalIsMarried').checked;
-            studentDetail.hasChild = document.getElementById('modalHasChild').checked;
-            studentDetail.hasJob = document.getElementById('modalHasJob').checked;
-            studentDetail.hasAchievement = document.getElementById('modalHasAchievement').checked;
-            
-            studentDetail.isMarriedPoints = parseFloat(document.getElementById('modalIsMarriedPoints').value) || scoreConfig.isMarried;
-            studentDetail.hasChildPoints = parseFloat(document.getElementById('modalHasChildPoints').value) || scoreConfig.hasChild;
-            studentDetail.hasJobPoints = parseFloat(document.getElementById('modalHasJobPoints').value) || scoreConfig.hasJob;
-            studentDetail.hasAchievementPoints = parseFloat(document.getElementById('modalHasAchievementPoints').value) || scoreConfig.hasAchievement;
-            
-            if (currentSessionId && studentDetail.sessionScores && studentDetail.sessionScores[currentSessionId]) {
-                const currentSessionScore = studentDetail.sessionScores[currentSessionId];
+            if (newTitle && newTitle.trim() !== '') {
+                session.title = newTitle.trim();
+                const newDate = prompt('تاریخ جدید جلسه را وارد کنید:', session.date);
+                session.date = newDate || session.date;
+                const newDescription = prompt('توضیحات جدید جلسه را وارد کنید:', session.description || '');
+                session.description = newDescription || '';
                 
-                ['noClassNotes', 'noHomework', 'writesNotes', 'extraClasses', 'motahhariStudy'].forEach(field => {
-                    if (currentSessionScore[field] === undefined) {
-                        currentSessionScore[field] = false;
-                    }
-                });
-            }
-            
-            studentDetails[studentId] = studentDetail;
-            saveData();
-            renderStudents();
-            renderAttendanceList();
-            renderStats();
-            closeModal('studentModal');
-            alert('اطلاعات با موفقیت ذخیره شد');
-        }
-        
-        function renderAttendance() {
-            const classId = document.getElementById('attendanceClass').value;
-            currentClassId = classId;
-            const attendanceContent = document.getElementById('attendanceContent');
-            
-            if (!classId) {
-                attendanceContent.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
-                return;
-            }
-            
-            const classSessions = sessions.filter(session => session.classId == classId);
-            
-            if (classSessions.length === 0) {
-                attendanceContent.innerHTML = '<div class="empty-state">ابتدا جلسه‌ای برای این کلاس ایجاد کنید</div>';
-                return;
-            }
-            
-            const classStudents = students.filter(student => student.classId == classId);
-            
-            if (classStudents.length === 0) {
-                attendanceContent.innerHTML = '<div class="empty-state">ابتدا دانشجویی برای این کلاس اضافه کنید</div>';
-                return;
-            }
-            
-            let html = `
-                <div class="form-group">
-                    <label>انتخاب جلسه:</label>
-                    <select id="attendanceSession" onchange="renderAttendanceList()">
-                        ${classSessions.map(session => `<option value="${session.id}" ${currentSessionId == session.id ? 'selected' : ''}>${session.title} (${session.date})</option>`).join('')}
-                    </select>
-                </div>
-                <div id="attendanceListContainer"></div>
-            `;
-            
-            attendanceContent.innerHTML = html;
-            renderAttendanceList();
-        }
-        
-        function renderAttendanceList() {
-            const sessionId = document.getElementById('attendanceSession').value;
-            currentSessionId = sessionId;
-            const container = document.getElementById('attendanceListContainer');
-            
-            if (!attendance[sessionId]) {
-                attendance[sessionId] = {};
-            }
-            
-            let classStudents = students.filter(student => student.classId == currentClassId);
-            
-            // Sort students alphabetically
-            classStudents = sortStudentsAlphabetically(classStudents);
-            
-            let html = `
-                <h3 style="margin: 20px 0;">ثبت حضور و غیاب</h3>
-                <p style="margin-bottom: 15px; color: #666;">تیک بزنید برای دانشجویانی که <strong>حاضر</strong> هستند (پیش‌فرض همه غایب هستند)</p>
-                <div class="attendance-list">
-                    ${classStudents.map(student => {
-                        const isPresent = attendance[sessionId][student.id] === true;
-                        const displayName = formatNameForDisplay(student.name);
-                        return `
-                            <div class="attendance-item">
-                                <input type="checkbox" id="attendance_${student.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendance(${sessionId}, ${student.id}, this.checked)">
-                                <span class="student-name-clickable" onclick="event.stopPropagation(); editStudentFromAttendance(${student.id})">${displayName}</span>
-                                <div class="score-badge">${calculateStudentScore(student.id).toFixed(2)}</div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-                <div style="margin-top: 20px;">
-                    <button onclick="saveAttendance()" class="btn btn-success">ذخیره حضور و غیاب</button>
-                </div>
-            `;
-            
-            container.innerHTML = html;
-        }
-        
-        function editStudentFromAttendance(studentId) {
-            editStudent(studentId);
-        }
-        
-        function updateAttendance(sessionId, studentId, isPresent) {
-            if (!attendance[sessionId]) {
-                attendance[sessionId] = {};
-            }
-            
-            attendance[sessionId][studentId] = isPresent;
-            saveData();
-            
-            const badge = document.querySelector(`#attendance_${studentId}`).parentElement.querySelector('.score-badge');
-            if (badge) {
-                badge.textContent = calculateStudentScore(studentId).toFixed(2);
+                saveData();
+                renderSessions();
+                alert('جلسه با موفقیت ویرایش شد.');
             }
         }
         
-        function saveAttendance() {
-            saveData();
-            renderStudents();
-            renderStats();
-            alert('حضور و غیاب با موفقیت ذخیره شد و امتیازات به‌روز شدند');
-        }
-        
-        // 🔥 تابع محاسبه امتیاز دانشجو - نسخه اصلاحی
-        function calculateStudentScore(studentId) {
-            let totalScore = 0;
-            const student = students.find(s => s.id === studentId);
-            if (!student) return 0;
-            
-            const studentDetail = studentDetails[studentId] || {};
-            
-            // 🔥 محاسبه امتیاز غیبت برای تمام جلسات کلاس (بدون توجه به تاریخ ثبت‌نام)
-            const allClassSessions = sessions.filter(s => s.classId === student.classId);
-            allClassSessions.forEach(session => {
-                if (attendance[session.id] && attendance[session.id][studentId] === true) {
-                    // حاضر - امتیاز تغییر نمیکند
-                } else {
-                    // غایب - امتیاز منفی
-                    totalScore += scoreConfig.absent; // -1
-                }
-            });
-            
-            // امتیازات مثبت (کتاب، فیلم، وضعیت شخصی، etc.)
-            if (studentDetail.isMarried) {
-                totalScore += studentDetail.isMarriedPoints || scoreConfig.isMarried;
-            }
-            
-            if (studentDetail.hasChild) {
-                totalScore += studentDetail.hasChildPoints || scoreConfig.hasChild;
-            }
-            
-            if (studentDetail.hasJob) {
-                totalScore += studentDetail.hasJobPoints || scoreConfig.hasJob;
-            }
-            
-            if (studentDetail.hasAchievement) {
-                totalScore += studentDetail.hasAchievementPoints || scoreConfig.hasAchievement;
-            }
-            
-            if (studentDetail.books) {
-                studentDetail.books.forEach(book => {
-                    if (book.name.trim() !== '') {
-                        totalScore += book.points || 0;
-                    }
-                });
-            }
-            
-            if (studentDetail.movies) {
-                studentDetail.movies.forEach(movie => {
-                    if (movie.name.trim() !== '') {
-                        totalScore += movie.points || 0;
-                    }
-                });
-            }
-            
-            if (studentDetail.series) {
-                studentDetail.series.forEach(series => {
-                    if (series.name.trim() !== '') {
-                        totalScore += series.points || 0;
-                    }
-                });
-            }
-            
-            // امتیازات جلسه‌ای (مثبت)
-            if (studentDetail.sessionScores) {
-                Object.keys(studentDetail.sessionScores).forEach(sessionId => {
-                    const sessionScore = studentDetail.sessionScores[sessionId];
-                    
-                    // فقط امتیازات مثبت جلسه‌ای حساب شود (غیبت قبلاً حساب شد)
-                    if (sessionScore.noClassNotes) {
-                        totalScore += sessionScore.noClassNotesPoints || scoreConfig.noClassNotes;
-                    }
-                    
-                    if (sessionScore.noHomework) {
-                        totalScore += sessionScore.noHomeworkPoints || scoreConfig.noHomework;
-                    }
-                    
-                    if (sessionScore.writesNotes) {
-                        totalScore += sessionScore.writesNotesPoints || scoreConfig.writesNotes;
-                    }
-                    
-                    if (sessionScore.extraClasses) {
-                        totalScore += sessionScore.extraClassesPoints || scoreConfig.extraClasses;
-                    }
-                    
-                    if (sessionScore.motahhariStudy) {
-                        totalScore += sessionScore.motahhariStudyPoints || scoreConfig.motahhariStudy;
-                    }
-                    
-                    if (sessionScore.customScores && Array.isArray(sessionScore.customScores)) {
-                        sessionScore.customScores.forEach(customScore => {
-                            if (customScore.label && customScore.label.trim() !== '') {
-                                totalScore += customScore.points || 0;
-                            }
-                        });
-                    }
-                });
-            }
-            
-            return totalScore;
-        }
-        
-        // 🔥 تابع آمار و گزارشات - نسخه اصلاحی
-        function renderStats() {
-            const classId = document.getElementById('reportClass').value;
-            currentClassId = classId;
-            const statsGrid = document.getElementById('statsGrid');
-            
-            if (!classId) {
-                statsGrid.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
-                return;
-            }
-            
-            const classSessions = sessions.filter(session => session.classId == classId);
-            const classStudents = students.filter(student => student.classId == classId);
-            
-            const totalSessions = classSessions.length;
-            const totalStudents = classStudents.length;
-            
-            // 🔥 محاسبه جدید میانگین حضور
-            let totalPossibleAttendance = totalSessions * totalStudents;
-            let totalAttendance = 0;
-            
-            classSessions.forEach(session => {
-                classStudents.forEach(student => {
-                    if (attendance[session.id] && attendance[session.id][student.id] === true) {
-                        totalAttendance++;
-                    }
-                });
-            });
-            
-            const avgAttendance = totalPossibleAttendance > 0 ? 
-                ((totalAttendance / totalPossibleAttendance) * 100) : 0;
-            
-            // محاسبه امتیازات
-            let totalScore = 0;
-            let highestScore = -Infinity;
-            let lowestScore = Infinity;
-            
-            classStudents.forEach(student => {
-                const score = calculateStudentScore(student.id);
-                totalScore += score;
-                if (score > highestScore) highestScore = score;
-                if (score < lowestScore) lowestScore = score;
-            });
-            
-            const avgScore = classStudents.length > 0 ? (totalScore / classStudents.length) : 0;
-            
-            statsGrid.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-number">${totalStudents}</div>
-                    <div class="stat-label">تعداد دانشجویان</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${totalSessions}</div>
-                    <div class="stat-label">تعداد جلسات</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${avgAttendance.toFixed(1)}%</div>
-                    <div class="stat-label">میانگین حضور</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${avgScore.toFixed(2)}</div>
-                    <div class="stat-label">میانگین امتیازات</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${highestScore.toFixed(2)}</div>
-                    <div class="stat-label">بالاترین امتیاز</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">${lowestScore.toFixed(2)}</div>
-                    <div class="stat-label">پایین‌ترین امتیاز</div>
-                </div>
-            `;
-        }
-        
+        // تابع برای خروجی گرفتن به اکسل
         function exportToExcel() {
             const classId = document.getElementById('reportClass').value;
+            
             if (!classId) {
-                alert('لطفاً یک کلاس انتخاب کنید');
+                alert('لطفاً یک کلاس انتخاب کنید.');
                 return;
             }
             
-            const classStudents = students.filter(student => student.classId == classId);
+            const classStudents = students.filter(s => s.classId === classId);
+            const classSessions = sessions.filter(s => s.classId === classId);
             
             if (classStudents.length === 0) {
-                alert('هیچ دانشجویی برای خروجی وجود ندارد');
+                alert('هیچ دانشجویی در این کلاس وجود ندارد.');
                 return;
             }
             
-            const currentClass = classes.find(cls => cls.id == classId);
-            const className = currentClass ? currentClass.name : 'کلاس';
+            // مرتب‌سازی اسامی بر اساس الفبای فارسی
+            const sortedStudents = sortPersianNames(classStudents.map(s => s.name)).map(name => 
+                classStudents.find(s => s.name === name)
+            );
             
-            const wb = XLSX.utils.book_new();
+            // ایجاد داده‌های برای اکسل
+            const data = [];
             
-            const studentData = classStudents.map(student => {
-                const studentDetail = studentDetails[student.id] || {};
-                const totalScore = calculateStudentScore(student.id);
+            // هدر جدول
+            const header = ['نام دانشجو', 'کد دانشجویی', 'شهر', 'رشته اصلی', 'رشته فرعی', 'امتیاز کل'];
+            classSessions.forEach(session => {
+                header.push(session.title);
+            });
+            header.push('یادداشت‌ها');
+            
+            data.push(header);
+            
+            // داده‌های دانشجویان
+            sortedStudents.forEach(student => {
+                const row = [
+                    student.name,
+                    student.studentCode || '',
+                    student.city || '',
+                    student.major || '',
+                    student.minor || '',
+                    calculateTotalScore(student)
+                ];
                 
-                let fixedScores = 0;
-                if (studentDetail.isMarried) fixedScores += (studentDetail.isMarriedPoints || scoreConfig.isMarried);
-                if (studentDetail.hasChild) fixedScores += (studentDetail.hasChildPoints || scoreConfig.hasChild);
-                if (studentDetail.hasJob) fixedScores += (studentDetail.hasJobPoints || scoreConfig.hasJob);
-                if (studentDetail.hasAchievement) fixedScores += (studentDetail.hasAchievementPoints || scoreConfig.hasAchievement);
-                
-                let booksScore = 0;
-                if (studentDetail.books) {
-                    studentDetail.books.forEach(book => {
-                        if (book.name.trim() !== '') booksScore += book.points || 0;
-                    });
-                }
-                
-                let moviesScore = 0;
-                if (studentDetail.movies) {
-                    studentDetail.movies.forEach(movie => {
-                        if (movie.name.trim() !== '') moviesScore += movie.points || 0;
-                    });
-                }
-                
-                let seriesScore = 0;
-                if (studentDetail.series) {
-                    studentDetail.series.forEach(s => {
-                        if (s.name.trim() !== '') seriesScore += s.points || 0;
-                    });
-                }
-                
-                let sessionScoresTotal = 0;
-                if (studentDetail.sessionScores) {
-                    Object.keys(studentDetail.sessionScores).forEach(sessionId => {
-                        const ss = studentDetail.sessionScores[sessionId];
-                        if (ss.noClassNotes) sessionScoresTotal += ss.noClassNotesPoints || scoreConfig.noClassNotes;
-                        if (ss.noHomework) sessionScoresTotal += ss.noHomeworkPoints || scoreConfig.noHomework;
-                        if (ss.writesNotes) sessionScoresTotal += ss.writesNotesPoints || scoreConfig.writesNotes;
-                        if (ss.extraClasses) sessionScoresTotal += ss.extraClassesPoints || scoreConfig.extraClasses;
-                        if (ss.motahhariStudy) sessionScoresTotal += ss.motahhariStudyPoints || scoreConfig.motahhariStudy;
-                        
-                        if (ss.customScores && Array.isArray(ss.customScores)) {
-                            ss.customScores.forEach(cs => {
-                                if (cs.label && cs.label.trim() !== '') {
-                                    sessionScoresTotal += cs.points || 0;
-                                }
-                            });
-                        }
-                    });
-                }
-                
-                // محاسبه امتیاز غیبت
-                const allClassSessions = sessions.filter(s => s.classId === student.classId);
-                let absenceScore = 0;
-                allClassSessions.forEach(session => {
-                    if (!attendance[session.id] || attendance[session.id][student.id] !== true) {
-                        absenceScore += scoreConfig.absent;
-                    }
+                classSessions.forEach(session => {
+                    const isPresent = attendance.some(a => a.studentId === student.id && a.sessionId === session.id);
+                    row.push(isPresent ? 'حاضر' : 'غایب');
                 });
                 
-                return {
-                    'نام دانشجو': formatNameForDisplay(student.name),
-                    'کد دانشجویی': studentDetail.studentCode || '',
-                    'توضیحات': student.notes,
-                    'شهر': studentDetail.city || '',
-                    'رشته اصلی': studentDetail.major || '',
-                    'رشته فرعی': studentDetail.minor || '',
-                    'متأهل': studentDetail.isMarried ? 'بله' : 'خیر',
-                    'فرزند': studentDetail.hasChild ? 'بله' : 'خیر',
-                    'شغل': studentDetail.hasJob ? 'بله' : 'خیر',
-                    'مقام/قهرمانی': studentDetail.hasAchievement ? 'بله' : 'خیر',
-                    'امتیاز ثابت': fixedScores,
-                    'کتاب‌ها': (studentDetail.books || []).map(b => b.name).filter(n => n.trim()).join(', '),
-                    'امتیاز کتاب‌ها': booksScore,
-                    'فیلم‌ها': (studentDetail.movies || []).map(m => m.name).filter(n => n.trim()).join(', '),
-                    'امتیاز فیلم‌ها': moviesScore,
-                    'سریال‌ها': (studentDetail.series || []).map(s => s.name).filter(n => n.trim()).join(', '),
-                    'امتیاز سریال‌ها': seriesScore,
-                    'امتیاز جلسات': sessionScoresTotal,
-                    'امتیاز غیبت': absenceScore,
-                    'امتیاز کل': totalScore
-                };
+                row.push(student.notes || '');
+                
+                data.push(row);
             });
             
-            const ws = XLSX.utils.json_to_sheet(studentData);
-            XLSX.utils.book_append_sheet(wb, ws, 'دانشجویان');
+            // ایجاد workbook و worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
             
-            const classSessions = sessions.filter(session => session.classId == classId);
-            
-            if (classSessions.length > 0) {
-                const attendanceData = [];
-                
-                classStudents.forEach(student => {
-                    const row = { 
-                        'نام دانشجو': formatNameForDisplay(student.name),
-                        'کد دانشجویی': (studentDetails[student.id] || {}).studentCode || ''
-                    };
-                    
-                    classSessions.forEach(session => {
-                        const isPresent = attendance[session.id] && attendance[session.id][student.id] === true;
-                        row[session.title] = isPresent ? 'حاضر' : 'غایب';
-                    });
-                    
-                    attendanceData.push(row);
-                });
-                
-                const ws2 = XLSX.utils.json_to_sheet(attendanceData);
-                XLSX.utils.book_append_sheet(wb, ws2, 'حضور و غیاب');
+            // تنظیم عرض ستون‌ها
+            const colWidths = [];
+            for (let i = 0; i < header.length; i++) {
+                colWidths.push({wch: 15});
             }
+            ws['!cols'] = colWidths;
             
-            XLSX.writeFile(wb, `استادیار_گزارش_${className}.xlsx`);
+            // اضافه کردن worksheet به workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'گزارش کلاس');
+            
+            // دانلود فایل
+            const className = classes.find(c => c.id === classId).name;
+            XLSX.writeFile(wb, `گزارش_کلاس_${className}.xlsx`);
+            
+            alert('فایل Excel با موفقیت دانلود شد.');
         }
         
-        // توابع جدید برای مدیریت JSON
-        function updateJSONOutput() {
-            const data = {
-                classes,
-                sessions,
-                students,
-                attendance,
-                studentDetails,
-                exportDate: new Date().toISOString(),
-                version: '1.0'
-            };
-            
-            document.getElementById('jsonOutput').value = JSON.stringify(data, null, 2);
+        // تابع برای وارد کردن اطلاعات از JSON
+        function openImportModal() {
+            document.getElementById('importJson').value = '';
+            document.getElementById('importModal').style.display = 'block';
         }
         
-        function exportToJSON() {
-            const data = {
-                classes,
-                sessions,
-                students,
-                attendance,
-                studentDetails,
-                exportDate: new Date().toISOString(),
-                version: '1.0'
-            };
+        // تابع برای وارد کردن اطلاعات از JSON
+        function importFromJson() {
+            const jsonText = document.getElementById('importJson').value;
             
-            const dataStr = JSON.stringify(data, null, 2);
-            const dataBlob = new Blob([dataStr], {type: 'application/json'});
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `استادیار_پشتیبان_${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-        }
-        
-        function copyJSON() {
-            const jsonOutput = document.getElementById('jsonOutput');
-            jsonOutput.select();
-            document.execCommand('copy');
-            alert('JSON با موفقیت کپی شد');
-        }
-        
-        function importFromJSON() {
-            const jsonInput = document.getElementById('jsonInput').value;
-            const importType = document.getElementById('importType').value;
-            
-            if (!jsonInput.trim()) {
-                alert('لطفاً JSON را وارد کنید یا فایل انتخاب کنید');
+            if (!jsonText.trim()) {
+                alert('لطفاً اطلاعات JSON را وارد کنید.');
                 return;
             }
             
             try {
-                const importedData = JSON.parse(jsonInput);
+                const data = JSON.parse(jsonText);
                 
-                // اعتبارسنجی ساختار داده
-                if (!importedData.classes || !importedData.sessions || !importedData.students || !importedData.attendance || !importedData.studentDetails) {
-                    throw new Error('ساختار JSON نامعتبر است');
-                }
-                
-                if (importType === 'replace') {
-                    // جایگزینی کامل اطلاعات
-                    classes = importedData.classes;
-                    sessions = importedData.sessions;
-                    students = importedData.students;
-                    attendance = importedData.attendance;
-                    studentDetails = importedData.studentDetails;
-                } else {
-                    // ادغام اطلاعات
-                    classes = [...classes, ...importedData.classes];
-                    sessions = [...sessions, ...importedData.sessions];
-                    students = [...students, ...importedData.students];
-                    
-                    // ادغام attendance
-                    Object.keys(importedData.attendance).forEach(sessionId => {
-                        if (!attendance[sessionId]) {
-                            attendance[sessionId] = {};
-                        }
-                        Object.assign(attendance[sessionId], importedData.attendance[sessionId]);
-                    });
-                    
-                    // ادغام studentDetails
-                    Object.assign(studentDetails, importedData.studentDetails);
-                }
+                if (data.classes) classes = data.classes;
+                if (data.students) students = data.students;
+                if (data.sessions) sessions = data.sessions;
+                if (data.attendance) attendance = data.attendance;
                 
                 saveData();
                 renderClasses();
                 renderClassSelectors();
                 renderSessions();
                 renderStudents();
-                renderAttendance();
-                renderStats();
                 
                 closeModal('importModal');
-                alert('اطلاعات با موفقیت وارد شد');
-            } catch (error) {
-                alert('خطا در وارد کردن JSON: ' + error.message);
+                alert('اطلاعات با موفقیت وارد شد.');
+            } catch (e) {
+                alert('خطا در پردازش JSON. لطفاً از صحت فرمت اطمینان حاصل کنید.');
+                console.error(e);
             }
-        }
-
-        // Function to preview Excel data
-        function previewExcelData(file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    let previewHtml = '<div style="direction: rtl; text-align: right;">';
-                    
-                    // Preview students sheet
-                    if (workbook.Sheets['دانشجویان']) {
-                        const studentData = XLSX.utils.sheet_to_json(workbook.Sheets['دانشجویان']);
-                        previewHtml += `<h5 style="color: #667eea; margin: 15px 0 10px 0;">دانشجویان (${studentData.length} نفر)</h5>`;
-                        if (studentData.length > 0) {
-                            previewHtml += `<table style="width: 100%; border-collapse: collapse; font-size: 12px;">`;
-                            previewHtml += `<tr style="background: #f8f9fa;">
-                                <th style="border: 1px solid #ddd; padding: 8px;">نام</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">کد دانشجویی</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">شهر</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">امتیاز کل</th>
-                            </tr>`;
-                            studentData.slice(0, 5).forEach(student => {
-                                previewHtml += `<tr>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['نام دانشجو'] || ''}</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['کد دانشجویی'] || ''}</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['شهر'] || ''}</td>
-                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['امتیاز کل'] || ''}</td>
-                                </tr>`;
-                            });
-                            if (studentData.length > 5) {
-                                previewHtml += `<tr><td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: center; color: #666;">و ${studentData.length - 5} دانشجوی دیگر...</td></tr>`;
-                            }
-                            previewHtml += `</table>`;
-                        }
-                    } else {
-                        previewHtml += `<p style="color: #dc3545;">❌ برگه "دانشجویان" در فایل Excel یافت نشد</p>`;
-                    }
-                    
-                    // Preview attendance sheet
-                    if (workbook.Sheets['حضور و غیاب']) {
-                        const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
-                        previewHtml += `<h5 style="color: #667eea; margin: 15px 0 10px 0;">حضور و غیاب (${attendanceData.length} رکورد)</h5>`;
-                        if (attendanceData.length > 0) {
-                            const sessionCount = Object.keys(attendanceData[0]).length - 2; // Subtract name and code columns
-                            previewHtml += `<p>${sessionCount} جلسه حضور و غیاب شناسایی شد</p>`;
-                        }
-                    } else {
-                        previewHtml += `<p style="color: #dc3545;">❌ برگه "حضور و غیاب" در فایل Excel یافت نشد</p>`;
-                    }
-                    
-                    previewHtml += '</div>';
-                    document.getElementById('previewContent').innerHTML = previewHtml;
-                    document.getElementById('excelImportPreview').style.display = 'block';
-                    
-                } catch (error) {
-                    alert('خطا در خواندن فایل Excel: ' + error.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        // Main Excel import function - CORRECTED VERSION
-        function importFromExcel() {
-            const fileInput = document.getElementById('excelFileInput');
-            const targetClassId = document.getElementById('excelTargetClass').value;
-            const importType = document.getElementById('excelImportType').value;
-            
-            if (!fileInput.files[0]) {
-                alert('لطفاً یک فایل Excel انتخاب کنید');
-                return;
-            }
-            
-            if (!targetClassId) {
-                alert('لطفاً یک کلاس برای وارد کردن اطلاعات انتخاب کنید');
-                return;
-            }
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    if (importType === 'replace') {
-                        // فقط دانشجویان و جلسات این کلاس را حذف می‌کنیم
-                        students = students.filter(student => student.classId != targetClassId);
-                        sessions = sessions.filter(session => session.classId != targetClassId);
-                        
-                        // حذف رکوردهای حضور و غیاب مربوط به این کلاس
-                        Object.keys(attendance).forEach(sessionId => {
-                            const session = sessions.find(s => s.id == sessionId);
-                            if (!session || session.classId == targetClassId) {
-                                delete attendance[sessionId];
-                            }
-                        });
-                        
-                        // حذف جزئیات دانشجویان این کلاس
-                        Object.keys(studentDetails).forEach(studentId => {
-                            const student = students.find(s => s.id == studentId);
-                            if (!student || student.classId == targetClassId) {
-                                delete studentDetails[studentId];
-                            }
-                        });
-                    }
-                    
-                    // Process students sheet
-                    if (workbook.Sheets['دانشجویان']) {
-                        const studentData = XLSX.utils.sheet_to_json(workbook.Sheets['دانشجویان']);
-                        console.log('Found students in Excel:', studentData.length);
-                        
-                        studentData.forEach((excelStudent, index) => {
-                            const studentName = excelStudent['نام دانشجو'];
-                            if (!studentName) return;
-                            
-                            // Convert display name back to storage format if needed
-                            const storageName = formatNameForStorage(studentName);
-                            
-                            let student;
-                            
-                            if (importType === 'replace') {
-                                // Create new student in replace mode
-                                student = {
-                                    id: Date.now() + index,
-                                    classId: parseInt(targetClassId),
-                                    name: storageName,
-                                    notes: excelStudent['توضیحات'] || ''
-                                };
-                                students.push(student);
-                            } else {
-                                // In merge mode, find existing student or create new
-                                student = students.find(s => 
-                                    s.classId == targetClassId && 
-                                    (s.name === storageName || formatNameForDisplay(s.name) === studentName)
-                                );
-                                
-                                if (!student) {
-                                    student = {
-                                        id: Date.now() + index,
-                                        classId: parseInt(targetClassId),
-                                        name: storageName,
-                                        notes: excelStudent['توضیحات'] || ''
-                                    };
-                                    students.push(student);
-                                }
-                            }
-                            
-                            // Always update student details
-                            if (!studentDetails[student.id]) {
-                                studentDetails[student.id] = {
-                                    books: [],
-                                    movies: [],
-                                    series: [],
-                                    studentCode: '',
-                                    city: '',
-                                    major: '',
-                                    minor: '',
-                                    isMarried: false,
-                                    hasChild: false,
-                                    hasJob: false,
-                                    hasAchievement: false,
-                                    sessionScores: {}
-                                };
-                            }
-                            
-                            const detail = studentDetails[student.id];
-                            detail.studentCode = excelStudent['کد دانشجویی'] || '';
-                            detail.city = excelStudent['شهر'] || '';
-                            detail.major = excelStudent['رشته اصلی'] || '';
-                            detail.minor = excelStudent['رشته فرعی'] || '';
-                            detail.isMarried = excelStudent['متأهل'] === 'بله';
-                            detail.hasChild = excelStudent['فرزند'] === 'بله';
-                            detail.hasJob = excelStudent['شغل'] === 'بله';
-                            detail.hasAchievement = excelStudent['مقام/قهرمانی'] === 'بله';
-                            
-                            // Process books
-                            if (excelStudent['کتاب‌ها'] && excelStudent['کتاب‌ها'].trim() !== '') {
-                                detail.books = excelStudent['کتاب‌ها'].split(',').map(book => ({
-                                    name: book.trim(),
-                                    points: parseFloat(excelStudent['امتیاز کتاب‌ها']) || scoreConfig.shortBook
-                                })).filter(book => book.name && book.name.trim() !== '');
-                            }
-                            
-                            // Process movies
-                            if (excelStudent['فیلم‌ها'] && excelStudent['فیلم‌ها'].trim() !== '') {
-                                detail.movies = excelStudent['فیلم‌ها'].split(',').map(movie => ({
-                                    name: movie.trim(),
-                                    points: parseFloat(excelStudent['امتیاز فیلم‌ها']) || scoreConfig.movie
-                                })).filter(movie => movie.name && movie.name.trim() !== '');
-                            }
-                            
-                            // Process series
-                            if (excelStudent['سریال‌ها'] && excelStudent['سریال‌ها'].trim() !== '') {
-                                detail.series = excelStudent['سریال‌ها'].split(',').map(series => ({
-                                    name: series.trim(),
-                                    points: parseFloat(excelStudent['امتیاز سریال‌ها']) || scoreConfig.series
-                                })).filter(series => series.name && series.name.trim() !== '');
-                            }
-                            
-                            console.log('Processed student:', student.name);
-                        });
-                    }
-                    
-                    // Process attendance sheet
-                    if (workbook.Sheets['حضور و غیاب']) {
-                        const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
-                        console.log('Found attendance records:', attendanceData.length);
-                        
-                        // Extract session titles from the first row (excluding name and code columns)
-                        const sessionTitles = Object.keys(attendanceData[0] || {}).filter(key => 
-                            key !== 'نام دانشجو' && key !== 'کد دانشجویی'
-                        );
-                        
-                        // Create sessions for each title if they don't exist
-                        sessionTitles.forEach(title => {
-                            let session = sessions.find(s => s.title === title && s.classId == targetClassId);
-                            if (!session) {
-                                // Generate a reasonable date for the session
-                                const today = new Date();
-                                const persianDate = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
-                                const sessionDate = `${persianDate[0]}/${String(persianDate[1]).padStart(2, '0')}/${String(persianDate[2]).padStart(2, '0')}`;
-                                
-                                session = {
-                                    id: Date.now() + Math.random(),
-                                    classId: parseInt(targetClassId),
-                                    title: title,
-                                    date: sessionDate,
-                                    description: 'وارد شده از Excel'
-                                };
-                                sessions.push(session);
-                            }
-                        });
-                        
-                        attendanceData.forEach(row => {
-                            const studentName = row['نام دانشجو'];
-                            if (!studentName) return;
-                            
-                            const storageName = formatNameForStorage(studentName);
-                            const student = students.find(s => 
-                                s.classId == targetClassId && 
-                                (s.name === storageName || formatNameForDisplay(s.name) === studentName)
-                            );
-                            
-                            if (student) {
-                                sessionTitles.forEach(title => {
-                                    const session = sessions.find(s => s.title === title && s.classId == targetClassId);
-                                    if (session) {
-                                        // Set attendance
-                                        if (!attendance[session.id]) {
-                                            attendance[session.id] = {};
-                                        }
-                                        attendance[session.id][student.id] = row[title] === 'حاضر';
-                                    }
-                                });
-                            }
-                        });
-                    }
-                    
-                    saveData();
-                    renderClasses();
-                    renderClassSelectors();
-                    renderSessions();
-                    renderStudents();
-                    renderAttendance();
-                    renderStats();
-                    
-                    closeModal('excelImportModal');
-                    alert(`اطلاعات با موفقیت از فایل Excel وارد شد\n\nتعداد دانشجویان: ${students.filter(s => s.classId == targetClassId).length}\nتعداد جلسات: ${sessions.filter(s => s.classId == targetClassId).length}`);
-                    
-                } catch (error) {
-                    console.error('Excel import error:', error);
-                    alert('خطا در وارد کردن اطلاعات از Excel: ' + error.message);
-                }
-            };
-            
-            reader.readAsArrayBuffer(file);
         }
         
+        // تابع برای خروجی گرفتن اطلاعات به JSON
+        function openExportModal() {
+            const data = {
+                classes: classes,
+                students: students,
+                sessions: sessions,
+                attendance: attendance
+            };
+            
+            document.getElementById('exportJson').value = JSON.stringify(data, null, 2);
+            document.getElementById('exportModal').style.display = 'block';
+        }
+        
+        // تابع برای کپی کردن JSON به کلیپ‌بورد
+        function copyToClipboard() {
+            const textarea = document.getElementById('exportJson');
+            textarea.select();
+            document.execCommand('copy');
+            alert('JSON با موفقیت کپی شد.');
+        }
+        
+        // تابع برای بازنشانی همه اطلاعات
         function resetData() {
-            if (confirm('⚠️ هشدار!\n\nآیا از بازنشانی کامل همه اطلاعات اطمینان دارید؟\n\nتمام کلاس‌ها، جلسات، دانشجویان و اطلاعات مرتبط پاک خواهد شد.\n\nاین عملیات قابل بازگشت نیست!')) {
+            if (confirm('آیا از بازنشانی همه اطلاعات اطمینان دارید؟ این عمل قابل بازگشت نیست.')) {
                 classes = [];
-                sessions = [];
                 students = [];
-                attendance = {};
-                studentDetails = {};
+                sessions = [];
+                attendance = [];
                 
                 saveData();
                 renderClasses();
                 renderClassSelectors();
                 renderSessions();
                 renderStudents();
-                renderAttendance();
-                renderStats();
                 
-                alert('✓ همه اطلاعات با موفقیت بازنشانی شدند');
+                alert('همه اطلاعات با موفقیت بازنشانی شدند.');
             }
         }
         
-        function saveData() {
-            const data = {
-                classes,
-                sessions,
-                students,
-                attendance,
-                studentDetails
+        // تابع برای وارد کردن اطلاعات از اکسل
+        function importFromExcel() {
+            document.getElementById('excelFileInput').click();
+        }
+        
+        // رویداد تغییر فایل اکسل
+        document.getElementById('excelFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const classId = document.getElementById('studentClass').value;
+            
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    
+                    // فرض می‌کنیم اولین sheet حاوی داده‌هاست
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    // حذف هدر
+                    jsonData.shift();
+                    
+                    // افزودن دانشجویان
+                    let addedCount = 0;
+                    jsonData.forEach(row => {
+                        if (row[0] && row[0].trim() !== '') {
+                            const newStudent = {
+                                id: generateId(),
+                                classId: classId,
+                                name: row[0].trim(),
+                                notes: row[1] || ''
+                            };
+                            
+                            students.push(newStudent);
+                            addedCount++;
+                        }
+                    });
+                    
+                    saveData();
+                    renderStudents();
+                    
+                    alert(`${addedCount} دانشجو از فایل اکسل با موفقیت وارد شدند.`);
+                    
+                    // ریست کردن ورودی فایل
+                    document.getElementById('excelFileInput').value = '';
+                } catch (error) {
+                    alert('خطا در خواندن فایل اکسل. لطفاً از صحت فرمت فایل اطمینان حاصل کنید.');
+                    console.error(error);
+                }
             };
             
-            localStorage.setItem('استادیار', JSON.stringify(data));
-        }
+            reader.readAsArrayBuffer(file);
+        });
         
-        function loadData() {
-            const data = JSON.parse(localStorage.getItem('استادیار'));
-            
-            if (data) {
-                classes = data.classes || [];
-                sessions = data.sessions || [];
-                students = data.students || [];
-                attendance = data.attendance || {};
-                studentDetails = data.studentDetails || {};
-            }
-        }
-        
-        function gregorianToJalali(gy, gm, gd) {
-            var g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-            var jy = (gy <= 1600) ? 0 : 979;
-            gy -= (gy <= 1600) ? 621 : 1600;
-            var gy2 = (gm > 2) ? (gy + 1) : gy;
-            var days = (365 * gy) + (parseInt((gy2 + 3) / 4)) - (parseInt((gy2 + 99) / 100)) + (parseInt((gy2 + 399) / 400)) - 80 + gd + g_d_m[gm - 1];
-            jy += 33 * (parseInt(days / 12053));
-            days %= 12053;
-            jy += 4 * (parseInt(days / 1461));
-            days %= 1461;
-            jy += parseInt((days - 1) / 365);
-            if (days > 365) days = (days - 1) % 365;
-            var jm = (days < 186) ? 1 + parseInt(days / 31) : 7 + parseInt((days - 186) / 30);
-            var jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
-            return [jy, jm, jd];
-        }
+        // مقداردهی اولیه
+        window.onload = function() {
+            renderClasses();
+            renderClassSelectors();
+            renderSessions();
+            renderStudents();
+        };
     </script>
 </body>
 </html>
