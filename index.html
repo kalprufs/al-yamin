@@ -6,7 +6,6 @@
     <title>استادیار - سیستم مدیریت حضور و غیاب کلاس</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* تمام استایل‌های قبلی بدون تغییر باقی می‌مانند */
         @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
         
         * {
@@ -345,6 +344,16 @@
             flex-shrink: 0;
         }
         
+        /* استایل جدید برای چک‌باکس تأخیر */
+        .attendance-item input[type="checkbox"].late-checkbox {
+            accent-color: #17a2b8;
+        }
+        
+        /* استایل جدید برای چک‌باکس نوشتن جزوه */
+        .attendance-item input[type="checkbox"].notes-checkbox {
+            accent-color: #28a745;
+        }
+        
         .student-name-clickable {
             cursor: pointer;
             color: #667eea;
@@ -655,6 +664,33 @@
             margin-top: 20px;
         }
         
+        /* استایل جدید برای آیکون‌ها */
+        .attendance-icons {
+            display: flex;
+            gap: 8px;
+            margin-right: 8px;
+        }
+        
+        .icon-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        /* استایل جدید برای دکمه ویرایش کلاس */
+        .btn-edit {
+            background: linear-gradient(135deg, #17a2b8, #6f42c1);
+            color: white;
+            box-shadow: 0 8px 20px rgba(23, 162, 184, 0.3);
+        }
+        
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(23, 162, 184, 0.4);
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -734,6 +770,15 @@
                 flex-direction: column;
                 align-items: center;
             }
+            
+            .attendance-icons {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .icon-label {
+                font-size: 9px;
+            }
         }
     </style>
 </head>
@@ -746,14 +791,14 @@
         
         <div class="main-content">
             <div class="tabs">
-                <button class="tab" onclick="showTab('classes')">کلاس‌ها</button>
-                <button class="tab active" onclick="showTab('sessions')">جلسات</button>
+                <button class="tab active" onclick="showTab('classes')">کلاس‌ها</button>
+                <button class="tab" onclick="showTab('sessions')">جلسات</button>
                 <button class="tab" onclick="showTab('students')">دانشجویان</button>
                 <button class="tab" onclick="showTab('attendance')">حضور و غیاب</button>
                 <button class="tab" onclick="showTab('reports')">گزارشات</button>
             </div>
             
-            <div id="classes" class="tab-content">
+            <div id="classes" class="tab-content active">
                 <h2>مدیریت کلاس‌ها</h2>
                 <form id="classForm">
                     <div class="form-group">
@@ -782,7 +827,7 @@
                 </div>
             </div>
             
-            <div id="sessions" class="tab-content active">
+            <div id="sessions" class="tab-content">
                 <h2>مدیریت جلسات</h2>
                 <div class="class-selector">
                     <label>انتخاب کلاس:</label>
@@ -944,23 +989,23 @@
                     <label>وضعیت امتیازات ثابت:</label>
                     <div class="checkbox-group">
                         <label>متأهل</label>
-                        <input type="checkbox" id="modalIsMarried">
-                        <input type="number" id="modalIsMarriedPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;">
+                        <input type="checkbox" id="modalIsMarried" onchange="updateModalScoreFromModal()">
+                        <input type="number" id="modalIsMarriedPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;" onchange="updateModalScoreFromModal()">
                     </div>
                     <div class="checkbox-group">
                         <label>داشتن فرزند</label>
-                        <input type="checkbox" id="modalHasChild">
-                        <input type="number" id="modalHasChildPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;">
+                        <input type="checkbox" id="modalHasChild" onchange="updateModalScoreFromModal()">
+                        <input type="number" id="modalHasChildPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;" onchange="updateModalScoreFromModal()">
                     </div>
                     <div class="checkbox-group">
                         <label>داشتن شغل</label>
-                        <input type="checkbox" id="modalHasJob">
-                        <input type="number" id="modalHasJobPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;">
+                        <input type="checkbox" id="modalHasJob" onchange="updateModalScoreFromModal()">
+                        <input type="number" id="modalHasJobPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;" onchange="updateModalScoreFromModal()">
                     </div>
                     <div class="checkbox-group">
                         <label>داشتن مقام یا قهرمانی</label>
-                        <input type="checkbox" id="modalHasAchievement">
-                        <input type="number" id="modalHasAchievementPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;">
+                        <input type="checkbox" id="modalHasAchievement" onchange="updateModalScoreFromModal()">
+                        <input type="number" id="modalHasAchievementPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;" onchange="updateModalScoreFromModal()">
                     </div>
                 </div>
                 
@@ -981,6 +1026,26 @@
                 </div>
                 
                 <button type="button" onclick="saveStudentDetails()" class="btn btn-success">ذخیره</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- مودال ویرایش کلاس -->
+    <div id="editClassModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editClassModal')">&times;</span>
+            <h2>ویرایش کلاس</h2>
+            <form id="editClassForm">
+                <input type="hidden" id="editClassId">
+                <div class="form-group">
+                    <label>نام کلاس:</label>
+                    <input type="text" id="editClassName" required>
+                </div>
+                <div class="form-group">
+                    <label>توضیحات:</label>
+                    <textarea id="editClassDescription" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">ذخیره تغییرات</button>
             </form>
         </div>
     </div>
@@ -1084,7 +1149,9 @@
             absent: -1,
             series: 3,
             movie: 1,
-            shortBook: 3
+            shortBook: 3,
+            lateArrival: -0.25, // امتیاز جدید برای تأخیر
+            writesNotesInClass: 0.25 // امتیاز جدید برای نوشتن جزوه در کلاس
         };
 
         let classes = [];
@@ -1104,9 +1171,6 @@
             });
         }
 
-        // تابع برای فرمت‌بندی نام برای نمایش (نام خانوادگی اول) - حذف شده
-        // دانشجویان به همان صورتی که وارد شده‌اند نمایش داده می‌شوند
-        
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
             renderClasses();
@@ -1161,6 +1225,12 @@
                     document.getElementById('excelFileName').textContent = file.name;
                     previewExcelData(file);
                 }
+            });
+
+            // مدیریت فرم ویرایش کلاس
+            document.getElementById('editClassForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveClassChanges();
             });
         });
         
@@ -1221,6 +1291,38 @@
             document.getElementById('classForm').reset();
         }
         
+        // تابع جدید برای ویرایش کلاس
+        function editClass(classId) {
+            const cls = classes.find(c => c.id === classId);
+            if (!cls) return;
+            
+            document.getElementById('editClassId').value = classId;
+            document.getElementById('editClassName').value = cls.name;
+            document.getElementById('editClassDescription').value = cls.description || '';
+            
+            document.getElementById('editClassModal').style.display = 'block';
+        }
+        
+        // تابع جدید برای ذخیره تغییرات کلاس
+        function saveClassChanges() {
+            const classId = document.getElementById('editClassId').value;
+            const newName = document.getElementById('editClassName').value;
+            const newDescription = document.getElementById('editClassDescription').value;
+            
+            const cls = classes.find(c => c.id == classId);
+            if (cls) {
+                cls.name = newName;
+                cls.description = newDescription;
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                
+                closeModal('editClassModal');
+                alert('اطلاعات کلاس با موفقیت به‌روزرسانی شد');
+            }
+        }
+        
         function renderClasses() {
             const classesList = document.getElementById('classesList');
             
@@ -1234,6 +1336,7 @@
                     <div class="class-header">
                         <div class="class-name">${cls.name}</div>
                         <div>
+                            <button onclick="editClass(${cls.id})" class="btn btn-edit">ویرایش</button>
                             <button onclick="deleteClass(${cls.id})" class="btn btn-danger">حذف</button>
                         </div>
                     </div>
@@ -1657,7 +1760,7 @@
             studentDetail.books.push({ name: '', points: scoreConfig.shortBook });
             studentDetails[studentId] = studentDetail;
             renderBooksList(studentDetail.books);
-            updateModalScore(studentId);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
         }
         
         function updateBook(index, name) {
@@ -1665,7 +1768,7 @@
             const studentDetail = studentDetails[studentId];
             if (studentDetail && studentDetail.books[index]) {
                 studentDetail.books[index].name = name;
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1674,7 +1777,7 @@
             const studentDetail = studentDetails[studentId];
             if (studentDetail && studentDetail.books[index]) {
                 studentDetail.books[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1684,7 +1787,7 @@
             if (studentDetail) {
                 studentDetail.books.splice(index, 1);
                 renderBooksList(studentDetail.books);
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1724,7 +1827,7 @@
             studentDetail.movies.push({ name: '', points: scoreConfig.movie });
             studentDetails[studentId] = studentDetail;
             renderMoviesList(studentDetail.movies);
-            updateModalScore(studentId);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
         }
         
         function updateMovie(index, name) {
@@ -1732,7 +1835,7 @@
             const studentDetail = studentDetails[studentId];
             if (studentDetail && studentDetail.movies[index]) {
                 studentDetail.movies[index].name = name;
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1741,7 +1844,7 @@
             const studentDetail = studentDetails[studentId];
             if (studentDetail && studentDetail.movies[index]) {
                 studentDetail.movies[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1751,7 +1854,7 @@
             if (studentDetail) {
                 studentDetail.movies.splice(index, 1);
                 renderMoviesList(studentDetail.movies);
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1791,7 +1894,7 @@
             studentDetail.series.push({ name: '', points: scoreConfig.series });
             studentDetails[studentId] = studentDetail;
             renderSeriesList(studentDetail.series);
-            updateModalScore(studentId);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
         }
         
         function updateSeries(index, name) {
@@ -1799,7 +1902,7 @@
             const studentDetail = studentDetails[studentId];
             if (studentDetail && studentDetail.series[index]) {
                 studentDetail.series[index].name = name;
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1808,7 +1911,7 @@
             const studentDetail = studentDetails[studentId];
             if (studentDetail && studentDetail.series[index]) {
                 studentDetail.series[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1818,7 +1921,7 @@
             if (studentDetail) {
                 studentDetail.series.splice(index, 1);
                 renderSeriesList(studentDetail.series);
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1937,7 +2040,7 @@
             });
             
             renderCustomSessionScores(studentId);
-            updateModalScore(studentId);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
         }
         
         function updateCustomScoreLabel(index, label) {
@@ -1955,7 +2058,7 @@
             
             if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores[index]) {
                 studentDetail.sessionScores[currentSessionId].customScores[index].points = parseFloat(points) || 0;
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -1966,7 +2069,7 @@
             if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores) {
                 studentDetail.sessionScores[currentSessionId].customScores.splice(index, 1);
                 renderCustomSessionScores(studentId);
-                updateModalScore(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
             }
         }
         
@@ -2000,7 +2103,7 @@
                 studentDetails[studentId].sessionScores[currentSessionId][pointsField] = scoreConfig[field];
             }
             
-            updateModalScore(studentId);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
         }
         
         function updateCurrentSessionScorePoints(field, points) {
@@ -2008,7 +2111,138 @@
             if (!studentDetails[studentId] || !studentDetails[studentId].sessionScores[currentSessionId]) return;
             
             studentDetails[studentId].sessionScores[currentSessionId][`${field}Points`] = parseFloat(points) || 0;
-            updateModalScore(studentId);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+        }
+        
+        // تابع جدید: به‌روزرسانی امتیاز در مودال با استفاده از داده‌های فعلی در مودال
+        function updateModalScoreFromModal() {
+            const studentId = document.getElementById('modalStudentId').value;
+            if (!studentId) return;
+            
+            // محاسبه امتیاز بر اساس داده‌های فعلی در مودال
+            const totalScore = calculateModalScore();
+            document.getElementById('modalScore').textContent = `امتیاز کل: ${totalScore.toFixed(2)}`;
+        }
+        
+        // تابع جدید: محاسبه امتیاز بر اساس داده‌های فعلی در مودال
+        function calculateModalScore() {
+            const studentId = document.getElementById('modalStudentId').value;
+            if (!studentId) return 0;
+            
+            const student = students.find(s => s.id == studentId);
+            if (!student) return 0;
+            
+            let totalScore = 0;
+            
+            // محاسبه امتیاز بر اساس حضور و غیاب (همانند تابع اصلی)
+            const allClassSessions = sessions.filter(s => s.classId === student.classId);
+            allClassSessions.forEach(session => {
+                const attendanceRecord = attendance[session.id] && attendance[session.id][studentId];
+                
+                if (attendanceRecord) {
+                    if (typeof attendanceRecord === 'object') {
+                        if (attendanceRecord.present === true) {
+                            if (attendanceRecord.late) {
+                                totalScore += scoreConfig.lateArrival; // -0.25
+                            }
+                            if (attendanceRecord.writesNotes) {
+                                totalScore += scoreConfig.writesNotesInClass; // +0.25
+                            }
+                        } else {
+                            totalScore += scoreConfig.absent; // -1
+                        }
+                    } 
+                    else if (attendanceRecord === true) {
+                        // حاضر است - امتیاز تغییر نمی‌کند
+                    } else {
+                        totalScore += scoreConfig.absent; // -1
+                    }
+                } else {
+                    totalScore += scoreConfig.absent; // -1
+                }
+            });
+            
+            // امتیازات ثابت از مودال
+            if (document.getElementById('modalIsMarried').checked) {
+                totalScore += parseFloat(document.getElementById('modalIsMarriedPoints').value) || scoreConfig.isMarried;
+            }
+            
+            if (document.getElementById('modalHasChild').checked) {
+                totalScore += parseFloat(document.getElementById('modalHasChildPoints').value) || scoreConfig.hasChild;
+            }
+            
+            if (document.getElementById('modalHasJob').checked) {
+                totalScore += parseFloat(document.getElementById('modalHasJobPoints').value) || scoreConfig.hasJob;
+            }
+            
+            if (document.getElementById('modalHasAchievement').checked) {
+                totalScore += parseFloat(document.getElementById('modalHasAchievementPoints').value) || scoreConfig.hasAchievement;
+            }
+            
+            // کتاب‌ها از مودال
+            const bookInputs = document.querySelectorAll('#booksList .dynamic-item input[type="text"]');
+            const bookPointsInputs = document.querySelectorAll('#booksList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < bookInputs.length; i++) {
+                if (bookInputs[i].value.trim() !== '') {
+                    totalScore += parseFloat(bookPointsInputs[i].value) || 0;
+                }
+            }
+            
+            // فیلم‌ها از مودال
+            const movieInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="text"]');
+            const moviePointsInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < movieInputs.length; i++) {
+                if (movieInputs[i].value.trim() !== '') {
+                    totalScore += parseFloat(moviePointsInputs[i].value) || 0;
+                }
+            }
+            
+            // سریال‌ها از مودال
+            const seriesInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="text"]');
+            const seriesPointsInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < seriesInputs.length; i++) {
+                if (seriesInputs[i].value.trim() !== '') {
+                    totalScore += parseFloat(seriesPointsInputs[i].value) || 0;
+                }
+            }
+            
+            // امتیازات جلسه‌ای از مودال
+            if (currentSessionId && studentDetails[studentId] && studentDetails[studentId].sessionScores && studentDetails[studentId].sessionScores[currentSessionId]) {
+                const sessionScore = studentDetails[studentId].sessionScores[currentSessionId];
+                
+                if (sessionScore.noClassNotes) {
+                    totalScore += sessionScore.noClassNotesPoints || scoreConfig.noClassNotes;
+                }
+                
+                if (sessionScore.noHomework) {
+                    totalScore += sessionScore.noHomeworkPoints || scoreConfig.noHomework;
+                }
+                
+                if (sessionScore.writesNotes) {
+                    totalScore += sessionScore.writesNotesPoints || scoreConfig.writesNotes;
+                }
+                
+                if (sessionScore.extraClasses) {
+                    totalScore += sessionScore.extraClassesPoints || scoreConfig.extraClasses;
+                }
+                
+                if (sessionScore.motahhariStudy) {
+                    totalScore += sessionScore.motahhariStudyPoints || scoreConfig.motahhariStudy;
+                }
+                
+                if (sessionScore.customScores && Array.isArray(sessionScore.customScores)) {
+                    sessionScore.customScores.forEach(customScore => {
+                        if (customScore.label && customScore.label.trim() !== '') {
+                            totalScore += customScore.points || 0;
+                        }
+                    });
+                }
+            }
+            
+            return totalScore;
         }
         
         function updateModalScore(studentId) {
@@ -2046,6 +2280,42 @@
             studentDetail.hasChildPoints = parseFloat(document.getElementById('modalHasChildPoints').value) || scoreConfig.hasChild;
             studentDetail.hasJobPoints = parseFloat(document.getElementById('modalHasJobPoints').value) || scoreConfig.hasJob;
             studentDetail.hasAchievementPoints = parseFloat(document.getElementById('modalHasAchievementPoints').value) || scoreConfig.hasAchievement;
+            
+            // به‌روزرسانی کتاب‌ها از مودال
+            studentDetail.books = [];
+            const bookInputs = document.querySelectorAll('#booksList .dynamic-item input[type="text"]');
+            const bookPointsInputs = document.querySelectorAll('#booksList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < bookInputs.length; i++) {
+                studentDetail.books.push({
+                    name: bookInputs[i].value,
+                    points: parseFloat(bookPointsInputs[i].value) || 0
+                });
+            }
+            
+            // به‌روزرسانی فیلم‌ها از مودال
+            studentDetail.movies = [];
+            const movieInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="text"]');
+            const moviePointsInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < movieInputs.length; i++) {
+                studentDetail.movies.push({
+                    name: movieInputs[i].value,
+                    points: parseFloat(moviePointsInputs[i].value) || 0
+                });
+            }
+            
+            // به‌روزرسانی سریال‌ها از مودال
+            studentDetail.series = [];
+            const seriesInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="text"]');
+            const seriesPointsInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < seriesInputs.length; i++) {
+                studentDetail.series.push({
+                    name: seriesInputs[i].value,
+                    points: parseFloat(seriesPointsInputs[i].value) || 0
+                });
+            }
             
             if (currentSessionId && studentDetail.sessionScores && studentDetail.sessionScores[currentSessionId]) {
                 const currentSessionScore = studentDetail.sessionScores[currentSessionId];
@@ -2124,9 +2394,22 @@
                 <div class="attendance-list">
                     ${classStudents.map(student => {
                         const isPresent = attendance[sessionId][student.id] === true;
+                        const isLate = (attendance[sessionId][student.id] && attendance[sessionId][student.id].late) || false;
+                        const writesNotes = (attendance[sessionId][student.id] && attendance[sessionId][student.id].writesNotes) || false;
+                        
                         return `
                             <div class="attendance-item">
                                 <input type="checkbox" id="attendance_${student.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendance(${sessionId}, ${student.id}, this.checked)">
+                                <div class="attendance-icons">
+                                    <div class="icon-label">
+                                        <input type="checkbox" id="late_${student.id}" class="late-checkbox" ${isLate ? 'checked' : ''} onchange="updateLateStatus(${sessionId}, ${student.id}, this.checked)">
+                                        <label for="late_${student.id}">تأخیر</label>
+                                    </div>
+                                    <div class="icon-label">
+                                        <input type="checkbox" id="notes_${student.id}" class="notes-checkbox" ${writesNotes ? 'checked' : ''} onchange="updateNotesStatus(${sessionId}, ${student.id}, this.checked)">
+                                        <label for="notes_${student.id}">نوشتن جزوه</label>
+                                    </div>
+                                </div>
                                 <span class="student-name-clickable" onclick="event.stopPropagation(); editStudentFromAttendance(${student.id})">${student.name}</span>
                                 <div class="score-badge">${calculateStudentScore(student.id).toFixed(2)}</div>
                             </div>
@@ -2150,10 +2433,79 @@
                 attendance[sessionId] = {};
             }
             
-            attendance[sessionId][studentId] = isPresent;
+            if (isPresent) {
+                // اگر قبلاً رکوردی وجود ندارد، یک رکورد جدید ایجاد می‌کنیم
+                if (!attendance[sessionId][studentId] || typeof attendance[sessionId][studentId] === 'boolean') {
+                    attendance[sessionId][studentId] = {
+                        present: true,
+                        late: false,
+                        writesNotes: false
+                    };
+                } else {
+                    attendance[sessionId][studentId].present = true;
+                }
+            } else {
+                // اگر غایب است، فقط وضعیت present را false می‌کنیم
+                if (attendance[sessionId][studentId] && typeof attendance[sessionId][studentId] === 'object') {
+                    attendance[sessionId][studentId].present = false;
+                } else {
+                    attendance[sessionId][studentId] = false;
+                }
+            }
+            
             saveData();
             
             const badge = document.querySelector(`#attendance_${studentId}`).parentElement.querySelector('.score-badge');
+            if (badge) {
+                badge.textContent = calculateStudentScore(studentId).toFixed(2);
+            }
+        }
+        
+        // تابع جدید برای به‌روزرسانی وضعیت تأخیر
+        function updateLateStatus(sessionId, studentId, isLate) {
+            if (!attendance[sessionId]) {
+                attendance[sessionId] = {};
+            }
+            
+            // اگر رکوردی وجود ندارد یا یک بولین است، یک رکورد جدید ایجاد می‌کنیم
+            if (!attendance[sessionId][studentId] || typeof attendance[sessionId][studentId] === 'boolean') {
+                attendance[sessionId][studentId] = {
+                    present: attendance[sessionId][studentId] || false,
+                    late: isLate,
+                    writesNotes: false
+                };
+            } else {
+                attendance[sessionId][studentId].late = isLate;
+            }
+            
+            saveData();
+            
+            const badge = document.querySelector(`#late_${studentId}`).parentElement.parentElement.querySelector('.score-badge');
+            if (badge) {
+                badge.textContent = calculateStudentScore(studentId).toFixed(2);
+            }
+        }
+        
+        // تابع جدید برای به‌روزرسانی وضعیت نوشتن جزوه
+        function updateNotesStatus(sessionId, studentId, writesNotes) {
+            if (!attendance[sessionId]) {
+                attendance[sessionId] = {};
+            }
+            
+            // اگر رکوردی وجود ندارد یا یک بولین است، یک رکورد جدید ایجاد می‌کنیم
+            if (!attendance[sessionId][studentId] || typeof attendance[sessionId][studentId] === 'boolean') {
+                attendance[sessionId][studentId] = {
+                    present: attendance[sessionId][studentId] || false,
+                    late: false,
+                    writesNotes: writesNotes
+                };
+            } else {
+                attendance[sessionId][studentId].writesNotes = writesNotes;
+            }
+            
+            saveData();
+            
+            const badge = document.querySelector(`#notes_${studentId}`).parentElement.parentElement.querySelector('.score-badge');
             if (badge) {
                 badge.textContent = calculateStudentScore(studentId).toFixed(2);
             }
@@ -2166,7 +2518,7 @@
             alert('حضور و غیاب با موفقیت ذخیره شد و امتیازات به‌روز شدند');
         }
         
-        // 🔥 تابع محاسبه امتیاز دانشجو - نسخه اصلاحی
+        // 🔥 تابع محاسبه امتیاز دانشجو - نسخه اصلاحی با اضافه شدن تأخیر و نوشتن جزوه
         function calculateStudentScore(studentId) {
             let totalScore = 0;
             const student = students.find(s => s.id === studentId);
@@ -2177,8 +2529,33 @@
             // 🔥 محاسبه امتیاز غیبت برای تمام جلسات کلاس (بدون توجه به تاریخ ثبت‌نام)
             const allClassSessions = sessions.filter(s => s.classId === student.classId);
             allClassSessions.forEach(session => {
-                if (attendance[session.id] && attendance[session.id][studentId] === true) {
-                    // حاضر - امتیاز تغییر نمیکند
+                const attendanceRecord = attendance[session.id] && attendance[session.id][studentId];
+                
+                if (attendanceRecord) {
+                    // اگر رکورد حضور یک شیء است
+                    if (typeof attendanceRecord === 'object') {
+                        if (attendanceRecord.present === true) {
+                            // حاضر است - امتیاز تغییر نمی‌کند
+                            // بررسی تأخیر
+                            if (attendanceRecord.late) {
+                                totalScore += scoreConfig.lateArrival; // -0.25
+                            }
+                            // بررسی نوشتن جزوه
+                            if (attendanceRecord.writesNotes) {
+                                totalScore += scoreConfig.writesNotesInClass; // +0.25
+                            }
+                        } else {
+                            // غایب - امتیاز منفی
+                            totalScore += scoreConfig.absent; // -1
+                        }
+                    } 
+                    // اگر رکورد حضور یک بولین است (برای سازگاری با داده‌های قدیمی)
+                    else if (attendanceRecord === true) {
+                        // حاضر است - امتیاز تغییر نمی‌کند
+                    } else {
+                        // غایب - امتیاز منفی
+                        totalScore += scoreConfig.absent; // -1
+                    }
                 } else {
                     // غایب - امتیاز منفی
                     totalScore += scoreConfig.absent; // -1
@@ -2288,8 +2665,13 @@
             
             classSessions.forEach(session => {
                 classStudents.forEach(student => {
-                    if (attendance[session.id] && attendance[session.id][student.id] === true) {
-                        totalAttendance++;
+                    const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
+                    if (attendanceRecord) {
+                        if (typeof attendanceRecord === 'object' && attendanceRecord.present === true) {
+                            totalAttendance++;
+                        } else if (attendanceRecord === true) {
+                            totalAttendance++;
+                        }
                     }
                 });
             });
@@ -2409,11 +2791,30 @@
                     });
                 }
                 
-                // محاسبه امتیاز غیبت
+                // محاسبه امتیاز غیبت و تأخیر
                 const allClassSessions = sessions.filter(s => s.classId === student.classId);
                 let absenceScore = 0;
+                let lateScore = 0;
+                let notesScore = 0;
+                
                 allClassSessions.forEach(session => {
-                    if (!attendance[session.id] || attendance[session.id][student.id] !== true) {
+                    const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
+                    
+                    if (attendanceRecord) {
+                        if (typeof attendanceRecord === 'object') {
+                            if (attendanceRecord.present !== true) {
+                                absenceScore += scoreConfig.absent;
+                            }
+                            if (attendanceRecord.late) {
+                                lateScore += scoreConfig.lateArrival;
+                            }
+                            if (attendanceRecord.writesNotes) {
+                                notesScore += scoreConfig.writesNotesInClass;
+                            }
+                        } else if (attendanceRecord === false) {
+                            absenceScore += scoreConfig.absent;
+                        }
+                    } else {
                         absenceScore += scoreConfig.absent;
                     }
                 });
@@ -2438,6 +2839,8 @@
                     'امتیاز سریال‌ها': seriesScore,
                     'امتیاز جلسات': sessionScoresTotal,
                     'امتیاز غیبت': absenceScore,
+                    'امتیاز تأخیر': lateScore,
+                    'امتیاز نوشتن جزوه': notesScore,
                     'امتیاز کل': totalScore
                 };
             });
@@ -2457,8 +2860,22 @@
                     };
                     
                     classSessions.forEach(session => {
-                        const isPresent = attendance[session.id] && attendance[session.id][student.id] === true;
-                        row[`${session.title} (${session.date})`] = isPresent ? 'حاضر' : 'غایب';
+                        const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
+                        let status = 'غایب';
+                        
+                        if (attendanceRecord) {
+                            if (typeof attendanceRecord === 'object') {
+                                if (attendanceRecord.present === true) {
+                                    status = 'حاضر';
+                                    if (attendanceRecord.late) status += ' (تأخیر)';
+                                    if (attendanceRecord.writesNotes) status += ' (نوشتن جزوه)';
+                                }
+                            } else if (attendanceRecord === true) {
+                                status = 'حاضر';
+                            }
+                        }
+                        
+                        row[`${session.title} (${session.date})`] = status;
                     });
                     
                     attendanceData.push(row);
@@ -2809,7 +3226,27 @@
                                         if (!attendance[session.id]) {
                                             attendance[session.id] = {};
                                         }
-                                        attendance[session.id][student.id] = row[sessionColumn] === 'حاضر';
+                                        
+                                        const status = row[sessionColumn];
+                                        if (status === 'حاضر') {
+                                            attendance[session.id][student.id] = {
+                                                present: true,
+                                                late: false,
+                                                writesNotes: false
+                                            };
+                                        } else if (status.includes('حاضر')) {
+                                            // اگر شامل اطلاعات اضافی است
+                                            const isLate = status.includes('تأخیر');
+                                            const writesNotes = status.includes('نوشتن جزوه');
+                                            
+                                            attendance[session.id][student.id] = {
+                                                present: true,
+                                                late: isLate,
+                                                writesNotes: writesNotes
+                                            };
+                                        } else {
+                                            attendance[session.id][student.id] = false;
+                                        }
                                     }
                                 });
                             });
