@@ -1,0 +1,3624 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استادیار - سیستم مدیریت حضور و غیاب کلاس</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        @font-face {
+            font-family: 'AbarLowFaNum';
+            src: url('otf/AbarLowFaNum-Regular.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'AbarLowFaNum', 'Vazirmatn', 'Tahoma', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            min-height: 100vh;
+            direction: rtl;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+        }
+        
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            padding: 8px;
+            gap: 8px;
+        }
+        
+        .tab {
+            flex: 1 1 auto;
+            min-width: 120px;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            color: #666;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .tab:hover:not(.active) {
+            color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+        
+        .tab-content h2 {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .class-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .class-selector label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .class-selector select {
+            padding: 10px 15px;
+            border: 2px solid #e3f2fd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            min-width: 200px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e3f2fd;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            margin: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(40, 167, 69, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #e91e63);
+            color: white;
+            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.3);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(220, 53, 69, 0.4);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8, #6f42c1);
+            color: white;
+            box-shadow: 0 8px 20px rgba(23, 162, 184, 0.3);
+        }
+        
+        .btn-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(23, 162, 184, 0.4);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            color: white;
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+        }
+        
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 193, 7, 0.4);
+        }
+        
+        .sessions-list, .students-list, .classes-list, .notes-list {
+            margin-top: 25px;
+        }
+        
+        .session-item, .student-item, .class-item, .notes-item {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9));
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-right: 4px solid #667eea;
+        }
+        
+        .session-item:hover, .student-item:hover, .class-item:hover, .notes-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .session-header, .student-header, .class-header, .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .session-title, .student-name, .class-name, .notes-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .session-item p, .student-item p, .class-item p, .notes-item p {
+            color: #5a6c7d;
+            line-height: 1.6;
+            margin: 6px 0;
+        }
+        
+        .session-item p strong, .student-item p strong, .class-item p strong, .notes-item p strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .attendance-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .attendance-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            gap: 12px;
+        }
+        
+        .attendance-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .attendance-item input[type="checkbox"] {
+            transform: scale(1.2);
+            accent-color: #667eea;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        /* استایل جدید برای چک‌باکس تأخیر */
+        .attendance-item input[type="checkbox"].late-checkbox {
+            accent-color: #17a2b8;
+        }
+        
+        /* استایل جدید برای چک‌باکس جزوه */
+        .attendance-item input[type="checkbox"].notes-checkbox {
+            accent-color: #28a745;
+        }
+        
+        .student-name-clickable {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 500;
+            flex-grow: 1;
+            transition: all 0.3s ease;
+            padding: 4px 8px;
+            border-radius: 6px;
+            user-select: none;
+        }
+        
+        .student-name-clickable:hover {
+            color: #5a6fd8;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .score-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 12px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.95));
+            margin: 3% auto;
+            padding: 35px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 850px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            animation: modalSlideIn 0.3s ease;
+            position: relative;
+        }
+        
+        @keyframes modalSlideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(-50px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+        }
+        
+        .close {
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s ease;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.8);
+        }
+        
+        .close:hover {
+            color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+            transform: rotate(90deg);
+        }
+        
+        .modal h2 {
+            margin-bottom: 30px;
+            color: #2c3e50;
+            font-size: 2em;
+            font-weight: 700;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .checkbox-group:hover {
+            border-color: #667eea;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            order: 2;
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            font-weight: 500;
+            color: #000000;
+            cursor: pointer;
+            order: 1;
+        }
+        
+        .dynamic-list {
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            padding: 18px;
+            margin: 12px 0;
+            background: rgba(255,255,255,0.4);
+        }
+        
+        .dynamic-item {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            padding: 12px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            gap: 10px;
+        }
+        
+        /* FIXED: Better visibility for dynamic item inputs */
+        .dynamic-item input {
+            flex: 1;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            padding: 8px 12px !important;
+            background: white !important;
+            color: #2c3e50 !important;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .dynamic-item input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+        
+        .score-display {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+        }
+        
+        .export-section {
+            text-align: center;
+            margin: 35px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9));
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .export-section h3 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 18px;
+        }
+        
+        .json-section {
+            margin: 25px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9));
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .json-section h3 {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 18px;
+        }
+        
+        .json-section textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e3f2fd;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .json-section .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-6px) scale(1.03);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .stat-label {
+            font-size: 0.95em;
+            font-weight: 500;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 50px 20px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 12px;
+            border: 2px dashed rgba(153,153,153,0.3);
+        }
+        
+        .bulk-add-section {
+            margin-top: 18px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9));
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .bulk-add-section h3 {
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+        
+        .bulk-add-section p {
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #17a2b8, #6f42c1);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 6px;
+        }
+        
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(23, 162, 184, 0.4);
+        }
+        
+        .json-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        /* استایل جدید برای آیکون‌ها */
+        .attendance-icons {
+            display: flex;
+            gap: 8px;
+            margin-right: 8px;
+        }
+        
+        .icon-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        /* استایل جدید برای دکمه ویرایش کلاس */
+        .btn-edit {
+            background: linear-gradient(135deg, #17a2b8, #6f42c1);
+            color: white;
+            box-shadow: 0 8px 20px rgba(23, 162, 184, 0.3);
+        }
+        
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(23, 162, 184, 0.4);
+        }
+        
+        /* استایل برای مدیریت جزوه‌ها */
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .notes-session-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e3f2fd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .session-checkbox-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 6px;
+            border: 1px solid #e3f2fd;
+        }
+        
+        .session-checkbox-item input[type="checkbox"] {
+            margin-left: 10px;
+            accent-color: #28a745;
+        }
+        
+        /* NEW: Search box style for attendance */
+        .search-box {
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e3f2fd;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+        
+        .search-box::after {
+            content: '🔍';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 16px;
+        }
+        
+        /* NEW: No results message */
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-style: italic;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+            border: 2px dashed rgba(153,153,153,0.3);
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .main-content {
+                padding: 20px 15px;
+                border-radius: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .header p {
+                font-size: 0.95em;
+            }
+            
+            .tabs {
+                padding: 6px;
+            }
+            
+            .tab {
+                min-width: calc(50% - 8px);
+                padding: 12px 15px;
+                font-size: 13px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .attendance-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 12px;
+            }
+            
+            .stat-number {
+                font-size: 2em;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 3% auto;
+                padding: 25px 18px;
+            }
+            
+            .session-header, .student-header, .class-header, .notes-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .btn {
+                padding: 10px 18px;
+                font-size: 13px;
+                margin: 4px;
+            }
+            
+            .class-selector {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .class-selector select {
+                min-width: 100%;
+            }
+            
+            .json-section .btn-group {
+                flex-direction: column;
+            }
+            
+            .json-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .attendance-icons {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .icon-label {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>استادیار</h1>
+            <p>مدیریت کامل کلاس‌ها، جلسات، دانشجویان و امتیازدهی</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('classes')">کلاس‌ها</button>
+                <button class="tab" onclick="showTab('sessions')">جلسات</button>
+                <button class="tab" onclick="showTab('students')">دانشجویان</button>
+                <button class="tab" onclick="showTab('attendance')">حضور و غیاب</button>
+                <button class="tab" onclick="showTab('notes')">جزوه‌ها</button>
+                <button class="tab" onclick="showTab('reports')">گزارشات</button>
+            </div>
+            
+            <div id="classes" class="tab-content active">
+                <h2>مدیریت کلاس‌ها</h2>
+                <form id="classForm">
+                    <div class="form-group">
+                        <label>نام کلاس:</label>
+                        <input type="text" id="className" required>
+                    </div>
+                    <div class="form-group">
+                        <label>توضیحات:</label>
+                        <textarea id="classDescription" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">افزودن کلاس</button>
+                </form>
+                
+                <div class="classes-list" id="classesList"></div>
+                
+                <!-- بخش وارد کردن JSON -->
+                <div class="json-section">
+                    <h3>مدیریت داده‌ها</h3>
+                    <p style="margin-bottom: 15px; color: #666;">می‌توانید اطلاعات را وارد یا خارج کنید:</p>
+                    
+                    <div class="json-buttons">
+                        <button onclick="openImportModal()" class="btn btn-info">وارد کردن اطلاعات از JSON</button>
+                        <button onclick="openExcelImportModal()" class="btn btn-success">وارد کردن اطلاعات از Excel</button>
+                        <button onclick="resetData()" class="btn btn-danger">بازنشانی همه اطلاعات</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="sessions" class="tab-content">
+                <h2>مدیریت جلسات</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="sessionClass" onchange="renderSessions()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
+                <form id="sessionForm">
+                    <div class="form-group">
+                        <label>عنوان جلسه:</label>
+                        <input type="text" id="sessionTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>تاریخ جلسه (شمسی):</label>
+                        <input type="text" id="sessionDate" placeholder="مثال: 1403/07/12" required>
+                    </div>
+                    <div class="form-group">
+                        <label>توضیحات:</label>
+                        <textarea id="sessionDescription" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">افزودن جلسه</button>
+                </form>
+                
+                <div class="sessions-list" id="sessionsList"></div>
+            </div>
+            
+            <div id="students" class="tab-content">
+                <h2>مدیریت دانشجویان</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="studentClass" onchange="renderStudents()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
+                <form id="studentForm">
+                    <div class="form-group">
+                        <label>نام دانشجو:</label>
+                        <input type="text" id="studentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>توضیحات کلی:</label>
+                        <textarea id="studentNotes" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">افزودن دانشجو</button>
+                    <button type="button" onclick="toggleBulkAdd()" class="btn btn-info">افزودن گروهی</button>
+                    <button type="button" onclick="deleteAllStudents()" class="btn btn-danger">حذف همه دانشجویان</button>
+                </form>
+                
+                <div id="bulkAddSection" class="bulk-add-section" style="display: none;">
+                    <h3>افزودن چند دانشجو به صورت همزمان</h3>
+                    <p>هر نام را در یک خط جداگانه وارد کنید:</p>
+                    <textarea id="bulkStudentNames" rows="8" placeholder="دانشجو ۱&#10;دانشجو ۲&#10;دانشجو ۳&#10;..." style="width: 100%; padding: 14px 18px; border: 2px solid #e3f2fd; border-radius: 12px; font-size: 14px; font-family: inherit; background: rgba(255, 255, 255, 0.8);"></textarea>
+                    <div style="margin-top: 12px;">
+                        <button type="button" onclick="addBulkStudents()" class="btn btn-success">افزودن همه</button>
+                        <button type="button" onclick="toggleBulkAdd()" class="btn btn-danger">انصراف</button>
+                    </div>
+                </div>
+                
+                <div class="students-list" id="studentsList"></div>
+            </div>
+            
+            <div id="attendance" class="tab-content">
+                <h2>حضور و غیاب</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="attendanceClass" onchange="renderAttendance()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
+                <div id="attendanceContent"></div>
+            </div>
+            
+            <!-- تب جدید برای مدیریت جزوه‌ها -->
+            <div id="notes" class="tab-content">
+                <h2>مدیریت جزوه‌ها</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="notesClass" onchange="renderNotesManagement()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
+                <div id="notesContent"></div>
+            </div>
+            
+            <div id="reports" class="tab-content">
+                <h2>گزارشات و آمار</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="reportClass" onchange="renderStats()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
+                <div class="stats-grid" id="statsGrid"></div>
+                
+                <div class="export-section">
+                    <h3>خروجی و ورودی داده‌ها</h3>
+                    <p style="margin-bottom: 18px; color: #666;">تمام اطلاعات را در قالب فایل Excel دریافت یا وارد کنید</p>
+                    <button onclick="exportToExcel()" class="btn btn-success">دانلود فایل Excel</button>
+                    <button onclick="openExcelImportModal()" class="btn btn-info">وارد کردن از Excel</button>
+                </div>
+                
+                <!-- بخش خروجی JSON -->
+                <div class="json-section">
+                    <h3>خروجی گرفتن اطلاعات</h3>
+                    <p style="margin-bottom: 15px; color: #666;">می‌توانید تمام اطلاعات را به صورت JSON ذخیره کنید:</p>
+                    
+                    <div class="json-buttons">
+                        <button onclick="openExportModal()" class="btn btn-warning">خروجی JSON</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- مودال جزئیات دانشجو -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('studentModal')">&times;</span>
+            <h2>جزئیات دانشجو</h2>
+            <form id="studentDetailsForm">
+                <input type="hidden" id="modalStudentId">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نام دانشجو:</label>
+                        <input type="text" id="modalStudentName" onchange="updateStudentName()">
+                    </div>
+                    <div class="form-group">
+                        <label>کد دانشجویی:</label>
+                        <input type="text" id="modalStudentCode">
+                    </div>
+                    <div class="form-group">
+                        <label>شهر محل زندگی:</label>
+                        <input type="text" id="modalCity">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رشته اصلی:</label>
+                        <input type="text" id="modalMajor">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>کتاب‌های مطالعه‌شده:</label>
+                    <div class="dynamic-list" id="booksList">
+                        <button type="button" onclick="addBook()" class="btn btn-info">+ افزودن کتاب</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>فیلم‌های دیده‌شده:</label>
+                    <div class="dynamic-list" id="moviesList">
+                        <button type="button" onclick="addMovie()" class="btn btn-info">+ افزودن فیلم</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>سریال‌های دیده‌شده:</label>
+                    <div class="dynamic-list" id="seriesList">
+                        <button type="button" onclick="addSeries()" class="btn btn-info">+ افزودن سریال</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>وضعیت امتیازات ثابت:</label>
+                    <div class="checkbox-group">
+                        <label>متأهل</label>
+                        <input type="checkbox" id="modalIsMarried" onchange="updateModalScoreFromModal()">
+                        <input type="number" id="modalIsMarriedPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;" onchange="updateModalScoreFromModal()">
+                    </div>
+                    <div class="checkbox-group">
+                        <label>داشتن فرزند</label>
+                        <input type="checkbox" id="modalHasChild" onchange="updateModalScoreFromModal()">
+                        <input type="number" id="modalHasChildPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;" onchange="updateModalScoreFromModal()">
+                    </div>
+                    <div class="checkbox-group">
+                        <label>داشتن شغل</label>
+                        <input type="checkbox" id="modalHasJob" onchange="updateModalScoreFromModal()">
+                        <input type="number" id="modalHasJobPoints" placeholder="امتیاز" style="width: 80px; margin-right: 10px;" onchange="updateModalScoreFromModal()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>امتیازات این جلسه:</label>
+                    <div id="currentSessionScores"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>امتیازات دلخواه این جلسه:</label>
+                    <div class="dynamic-list" id="customSessionScores">
+                        <button type="button" onclick="addCustomSessionScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button>
+                    </div>
+                </div>
+                
+                <div class="score-display" id="modalScore">
+                    امتیاز کل: 0
+                </div>
+                
+                <button type="button" onclick="saveStudentDetails()" class="btn btn-success">ذخیره</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- مودال ویرایش کلاس -->
+    <div id="editClassModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editClassModal')">&times;</span>
+            <h2>ویرایش کلاس</h2>
+            <form id="editClassForm">
+                <input type="hidden" id="editClassId">
+                <div class="form-group">
+                    <label>نام کلاس:</label>
+                    <input type="text" id="editClassName" required>
+                </div>
+                <div class="form-group">
+                    <label>توضیحات:</label>
+                    <textarea id="editClassDescription" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">ذخیره تغییرات</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- مودال خروجی JSON -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('exportModal')">&times;</span>
+            <h2>خروجی گرفتن اطلاعات به صورت JSON</h2>
+            
+            <div class="form-group">
+                <label>اطلاعات JSON:</label>
+                <textarea id="jsonOutput" readonly style="min-height: 300px;"></textarea>
+            </div>
+            
+            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="exportToJSON()" class="btn btn-warning">دانلود فایل JSON</button>
+                <button onclick="copyJSON()" class="btn btn-info">کپی JSON</button>
+                <button onclick="closeModal('exportModal')" class="btn btn-danger">بستن</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- مودال وارد کردن JSON -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('importModal')">&times;</span>
+            <h2>وارد کردن اطلاعات از JSON</h2>
+            
+            <div class="form-group">
+                <label>انتخاب فایل JSON:</label>
+                <input type="file" id="jsonFileInput" class="file-input" accept=".json">
+                <label for="jsonFileInput" class="file-label">انتخاب فایل JSON</label>
+                <span id="fileName" style="margin-right: 10px; color: #666;">هیچ فایلی انتخاب نشده</span>
+            </div>
+            
+            <div class="form-group">
+                <label>یا مستقیماً JSON را در کادر زیر وارد کنید:</label>
+                <textarea id="jsonInput" placeholder='{"classes": [], "sessions": [], "students": [], "attendance": {}, "studentDetails": {}}' style="min-height: 250px;"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>نوع عملیات:</label>
+                <select id="importType" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
+                    <option value="replace">جایگزینی کامل اطلاعات فعلی</option>
+                    <option value="merge">ادغام با اطلاعات فعلی</option>
+                </select>
+            </div>
+            
+            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="importFromJSON()" class="btn btn-success">وارد کردن اطلاعات</button>
+                                <button onclick="closeModal('importModal')" class="btn btn-danger">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال وارد کردن Excel -->
+    <div id="excelImportModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('excelImportModal')">&times;</span>
+            <h2>وارد کردن اطلاعات از Excel</h2>
+            
+            <div class="form-group">
+                <label>انتخاب فایل Excel:</label>
+                <input type="file" id="excelFileInput" class="file-input" accept=".xlsx, .xls">
+                <label for="excelFileInput" class="file-label">انتخاب فایل Excel</label>
+                <span id="excelFileName" style="margin-right: 10px; color: #666;">هیچ فایلی انتخاب نشده</span>
+            </div>
+            
+            <div class="form-group">
+                <label>نوع عملیات:</label>
+                <select id="excelImportType" style="width: 100%; padding: 12px; border: 2px solid #e3f2fd; border-radius: 8px;">
+                    <option value="replace">جایگزینی کامل اطلاعات فعلی</option>
+                    <option value="merge">ادغام با اطلاعات فعلی</option>
+                </select>
+            </div>
+            
+            <div id="excelImportPreview" style="margin: 20px 0; display: none;">
+                <h4>پیش‌نمایش داده‌ها:</h4>
+                <div id="previewContent" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+            
+            <div class="btn-group" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="importFromExcel()" class="btn btn-success">وارد کردن اطلاعات</button>
+                <button onclick="closeModal('excelImportModal')" class="btn btn-danger">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تنظیمات امتیازات - اصلاح شده بر اساس درخواست‌ها
+        let scoreConfig = {
+            isMarried: 1,
+            hasChild: 1,
+            hasJob: 1,
+            hasAchievement: 1,
+            extraClasses: 1, // کلاس جبرانی
+            absent: -1,
+            series: 3,
+            movie: 1,
+            shortBook: 3,
+            lateArrival: -0.25, // امتیاز جدید برای تأخیر
+            writesNotesInClass: 0.25 // امتیاز جدید برای نوشتن جزوه در کلاس
+        };
+
+        let classes = [];
+        let sessions = [];
+        let students = [];
+        let attendance = {};
+        let studentDetails = {};
+        let currentSessionId = null;
+        let currentClassId = null;
+        let studentNotes = {}; // ذخیره جزوه‌های دانشجویان
+        let attendanceSearchQuery = ''; // NEW: برای جستجوی دانشجویان در حضور و غیاب
+        
+        // تابع برای مرتب‌سازی دانشجویان به ترتیب الفبایی فارسی
+        function sortStudentsAlphabetically(studentsList) {
+            return studentsList.sort((a, b) => {
+                const nameA = a.name || '';
+                const nameB = b.name || '';
+                return nameA.localeCompare(nameB, 'fa');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            renderClasses();
+            renderClassSelectors();
+            renderSessions();
+            renderStudents();
+            renderAttendance();
+            renderNotesManagement();
+            renderStats();
+            
+            const today = new Date();
+            const persianToday = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            document.getElementById('sessionDate').value = `${persianToday[0]}/${String(persianToday[1]).padStart(2, '0')}/${String(persianToday[2]).padStart(2, '0')}`;
+            
+            document.getElementById('classForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addClass();
+            });
+            
+            document.getElementById('sessionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addSession();
+            });
+            
+            document.getElementById('studentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addStudent();
+            });
+            
+            // مدیریت انتخاب فایل JSON
+            document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('fileName').textContent = file.name;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const jsonData = JSON.parse(e.target.result);
+                            document.getElementById('jsonInput').value = JSON.stringify(jsonData, null, 2);
+                        } catch (error) {
+                            alert('خطا در خواندن فایل JSON: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            // مدیریت انتخاب فایل Excel
+            document.getElementById('excelFileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    document.getElementById('excelFileName').textContent = file.name;
+                    previewExcelData(file);
+                }
+            });
+
+            // مدیریت فرم ویرایش کلاس
+            document.getElementById('editClassForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveClassChanges();
+            });
+        });
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'attendance') {
+                renderAttendance();
+            } else if (tabName === 'reports') {
+                renderStats();
+            } else if (tabName === 'notes') {
+                renderNotesManagement();
+            }
+        }
+        
+        function openExportModal() {
+            updateJSONOutput();
+            document.getElementById('exportModal').style.display = 'block';
+        }
+        
+        function openImportModal() {
+            document.getElementById('importModal').style.display = 'block';
+        }
+
+        function openExcelImportModal() {
+            document.getElementById('excelImportModal').style.display = 'block';
+            document.getElementById('excelImportPreview').style.display = 'none';
+            document.getElementById('excelFileInput').value = '';
+            document.getElementById('excelFileName').textContent = 'هیچ فایلی انتخاب نشده';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function addClass() {
+            const name = document.getElementById('className').value;
+            const description = document.getElementById('classDescription').value;
+            
+            const newClass = {
+                id: Date.now(),
+                name,
+                description
+            };
+            
+            classes.push(newClass);
+            saveData();
+            renderClasses();
+            renderClassSelectors();
+            
+            document.getElementById('classForm').reset();
+        }
+        
+        // تابع جدید برای ویرایش کلاس
+        function editClass(classId) {
+            const cls = classes.find(c => c.id === classId);
+            if (!cls) return;
+            
+            document.getElementById('editClassId').value = classId;
+            document.getElementById('editClassName').value = cls.name;
+            document.getElementById('editClassDescription').value = cls.description || '';
+            
+            document.getElementById('editClassModal').style.display = 'block';
+        }
+        
+        // تابع جدید برای ذخیره تغییرات کلاس
+        function saveClassChanges() {
+            const classId = document.getElementById('editClassId').value;
+            const newName = document.getElementById('editClassName').value;
+            const newDescription = document.getElementById('editClassDescription').value;
+            
+            const cls = classes.find(c => c.id == classId);
+            if (cls) {
+                cls.name = newName;
+                cls.description = newDescription;
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                
+                closeModal('editClassModal');
+                alert('اطلاعات کلاس با موفقیت به‌روزرسانی شد');
+            }
+        }
+        
+        function renderClasses() {
+            const classesList = document.getElementById('classesList');
+            
+            if (classes.length === 0) {
+                classesList.innerHTML = '<div class="empty-state">هنوز کلاسی اضافه نشده است</div>';
+                return;
+            }
+            
+            classesList.innerHTML = classes.map(cls => `
+                <div class="class-item">
+                    <div class="class-header">
+                        <div class="class-name">${cls.name}</div>
+                        <div>
+                            <button onclick="editClass(${cls.id})" class="btn btn-edit">ویرایش</button>
+                            <button onclick="deleteClass(${cls.id})" class="btn btn-danger">حذف</button>
+                        </div>
+                    </div>
+                    <p><strong>توضیحات:</strong> ${cls.description}</p>
+                </div>
+            `).join('');
+        }
+        
+        function deleteClass(id) {
+            if (confirm('آیا از حذف این کلاس اطمینان دارید؟ تمام جلسات و دانشجویان این کلاس نیز حذف خواهند شد.')) {
+                // Remove the class
+                classes = classes.filter(cls => cls.id !== id);
+                
+                // Remove sessions for this class
+                sessions = sessions.filter(session => session.classId !== id);
+                
+                // Remove students for this class
+                students = students.filter(student => student.classId !== id);
+                
+                // Remove attendance records for this class
+                Object.keys(attendance).forEach(sessionId => {
+                    const session = sessions.find(s => s.id == sessionId);
+                    if (!session || session.classId === id) {
+                        delete attendance[sessionId];
+                    }
+                });
+                
+                // Remove student details for students in this class
+                Object.keys(studentDetails).forEach(studentId => {
+                    const student = students.find(s => s.id == studentId);
+                    if (!student || student.classId === id) {
+                        delete studentDetails[studentId];
+                    }
+                });
+                
+                // Remove student notes for this class
+                Object.keys(studentNotes).forEach(studentId => {
+                    const student = students.find(s => s.id == studentId);
+                    if (!student || student.classId === id) {
+                        delete studentNotes[studentId];
+                    }
+                });
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                renderSessions();
+                renderStudents();
+                renderAttendance();
+                renderNotesManagement();
+                renderStats();
+            }
+        }
+        
+        function renderClassSelectors() {
+            const classSelectors = [
+                'sessionClass',
+                'studentClass',
+                'attendanceClass',
+                'reportClass',
+                'notesClass'
+            ];
+            
+            classSelectors.forEach(selectorId => {
+                const selector = document.getElementById(selectorId);
+                selector.innerHTML = '<option value="">-- انتخاب کنید --</option>' + 
+                    classes.map(cls => `<option value="${cls.id}">${cls.name}</option>`).join('');
+            });
+        }
+        
+        function addSession() {
+            const classId = document.getElementById('sessionClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
+            const title = document.getElementById('sessionTitle').value;
+            const date = document.getElementById('sessionDate').value;
+            const description = document.getElementById('sessionDescription').value;
+            
+            const session = {
+                id: Date.now(),
+                classId: parseInt(classId),
+                title,
+                date,
+                description
+            };
+            
+            sessions.push(session);
+            saveData();
+            renderSessions();
+            renderNotesManagement();
+            
+            document.getElementById('sessionForm').reset();
+            
+            const today = new Date();
+            const persianToday = gregorianToJalali(today.getFullYear(), today.getMonth() + 1, today.getDate());
+            document.getElementById('sessionDate').value = `${persianToday[0]}/${String(persianToday[1]).padStart(2, '0')}/${String(persianToday[2]).padStart(2, '0')}`;
+        }
+        
+        function renderSessions() {
+            const classId = document.getElementById('sessionClass').value;
+            currentClassId = classId;
+            const sessionsList = document.getElementById('sessionsList');
+            
+            if (!classId) {
+                sessionsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            
+            if (classSessions.length === 0) {
+                sessionsList.innerHTML = '<div class="empty-state">هنوز جلسه‌ای برای این کلاس اضافه نشده است</div>';
+                return;
+            }
+            
+            sessionsList.innerHTML = classSessions.map(session => `
+                <div class="session-item">
+                    <div class="session-header">
+                        <div class="session-title">${session.title}</div>
+                        <div>
+                            <button onclick="openSessionScoring(${session.id})" class="btn btn-info">امتیازدهی</button>
+                            <button onclick="deleteSession(${session.id})" class="btn btn-danger">حذف</button>
+                        </div>
+                    </div>
+                    <p><strong>تاریخ:</strong> ${session.date}</p>
+                    <p><strong>توضیحات:</strong> ${session.description}</p>
+                </div>
+            `).join('');
+        }
+        
+        function deleteSession(id) {
+            if (confirm('آیا از حذف این جلسه اطمینان دارید؟')) {
+                sessions = sessions.filter(session => session.id !== id);
+                if (attendance[id]) {
+                    delete attendance[id];
+                }
+                Object.keys(studentDetails).forEach(studentId => {
+                    if (studentDetails[studentId].sessionScores && studentDetails[studentId].sessionScores[id]) {
+                        delete studentDetails[studentId].sessionScores[id];
+                    }
+                });
+                // حذف جزوه‌های مربوط به این جلسه
+                Object.keys(studentNotes).forEach(studentId => {
+                    if (studentNotes[studentId] && studentNotes[studentId][id]) {
+                        delete studentNotes[studentId][id];
+                    }
+                });
+                saveData();
+                renderSessions();
+                renderAttendance();
+                renderNotesManagement();
+                renderStats();
+            }
+        }
+        
+        function openSessionScoring(sessionId) {
+            currentSessionId = sessionId;
+            showTab('attendance');
+            const session = sessions.find(s => s.id == sessionId);
+            if (session) {
+                document.getElementById('attendanceClass').value = session.classId;
+                renderAttendance();
+            }
+        }
+        
+        function addStudent() {
+            const classId = document.getElementById('studentClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
+            let name = document.getElementById('studentName').value;
+            const notes = document.getElementById('studentNotes').value;
+            
+            const student = {
+                id: Date.now(),
+                classId: parseInt(classId),
+                name: name,
+                notes
+            };
+            
+            students.push(student);
+            saveData();
+            renderStudents();
+            renderNotesManagement();
+            
+            document.getElementById('studentForm').reset();
+        }
+        
+        function toggleBulkAdd() {
+            const bulkSection = document.getElementById('bulkAddSection');
+            if (bulkSection.style.display === 'none') {
+                bulkSection.style.display = 'block';
+            } else {
+                bulkSection.style.display = 'none';
+            }
+        }
+        
+        function addBulkStudents() {
+            const classId = document.getElementById('studentClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
+            const namesText = document.getElementById('bulkStudentNames').value;
+            if (!namesText.trim()) {
+                alert('لطفاً نام دانشجویان را وارد کنید');
+                return;
+            }
+            
+            const names = namesText.split('\n').filter(name => name.trim() !== '');
+            
+            names.forEach(name => {
+                const student = {
+                    id: Date.now() + Math.random(),
+                    classId: parseInt(classId),
+                    name: name.trim(),
+                    notes: ''
+                };
+                
+                students.push(student);
+            });
+            
+            saveData();
+            renderStudents();
+            renderNotesManagement();
+            toggleBulkAdd();
+            
+            document.getElementById('bulkStudentNames').value = '';
+        }
+        
+        function renderStudents() {
+            const classId = document.getElementById('studentClass').value;
+            currentClassId = classId;
+            const studentsList = document.getElementById('studentsList');
+            
+            if (!classId) {
+                studentsList.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            let classStudents = students.filter(student => student.classId == classId);
+            
+            // مرتب‌سازی دانشجویان به ترتیب الفبایی
+            classStudents = sortStudentsAlphabetically(classStudents);
+            
+            if (classStudents.length === 0) {
+                studentsList.innerHTML = '<div class="empty-state">هنوز دانشجویی برای این کلاس اضافه نشده است</div>';
+                return;
+            }
+            
+            studentsList.innerHTML = classStudents.map(student => {
+                const totalScore = calculateStudentScore(student.id);
+                
+                return `
+                    <div class="student-item">
+                        <div class="student-header">
+                            <div class="student-name">${student.name}</div>
+                            <div>
+                                <button onclick="editStudent(${student.id})" class="btn btn-primary">ویرایش</button>
+                                <button onclick="deleteStudent(${student.id})" class="btn btn-danger">حذف</button>
+                            </div>
+                        </div>
+                        <p><strong>توضیحات:</strong> ${student.notes}</p>
+                        <p><strong>امتیاز کل:</strong> <span class="score-badge">${totalScore.toFixed(2)}</span></p>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function deleteStudent(id) {
+            if (confirm('آیا از حذف این دانشجو اطمینان دارید؟')) {
+                students = students.filter(student => student.id !== id);
+                delete studentDetails[id];
+                delete studentNotes[id];
+                
+                Object.keys(attendance).forEach(sessionId => {
+                    if (attendance[sessionId][id]) {
+                        delete attendance[sessionId][id];
+                    }
+                });
+                
+                saveData();
+                renderStudents();
+                renderAttendance();
+                renderNotesManagement();
+                renderStats();
+            }
+        }
+        
+        function deleteAllStudents() {
+            const classId = document.getElementById('studentClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classStudents.length === 0) {
+                alert('هیچ دانشجویی برای حذف وجود ندارد');
+                return;
+            }
+            
+            const confirmation = confirm(`⚠️ هشدار!\n\nآیا از حذف تمام ${classStudents.length} دانشجو در این کلاس اطمینان دارید؟\n\nتمام اطلاعات دانشجویان شامل امتیازات، حضور و غیاب و جزوه‌ها پاک خواهد شد.\n\nاین عملیات قابل بازگشت نیست!`);
+            
+            if (confirmation) {
+                const secondConfirmation = confirm('آیا واقعاً مطمئن هستید؟\n\nاین آخرین فرصت برای انصراف است.');
+                
+                if (secondConfirmation) {
+                    // Remove students for this class
+                    students = students.filter(student => student.classId != classId);
+                    
+                    // Remove student details for students in this class
+                    Object.keys(studentDetails).forEach(studentId => {
+                        const student = students.find(s => s.id == studentId);
+                        if (!student) {
+                            delete studentDetails[studentId];
+                        }
+                    });
+                    
+                    // Remove student notes for students in this class
+                    Object.keys(studentNotes).forEach(studentId => {
+                        const student = students.find(s => s.id == studentId);
+                        if (!student) {
+                            delete studentNotes[studentId];
+                        }
+                    });
+                    
+                    // Remove attendance records for students in this class
+                    Object.keys(attendance).forEach(sessionId => {
+                        const session = sessions.find(s => s.id == sessionId);
+                        if (session && session.classId == classId) {
+                            delete attendance[sessionId];
+                        } else {
+                            Object.keys(attendance[sessionId]).forEach(studentId => {
+                                const student = students.find(s => s.id == studentId);
+                                if (!student) {
+                                    delete attendance[sessionId][studentId];
+                                }
+                            });
+                        }
+                    });
+                    
+                    saveData();
+                    renderStudents();
+                    renderAttendance();
+                    renderNotesManagement();
+                    renderStats();
+                    
+                    alert('✓ تمام دانشجویان این کلاس با موفقیت حذف شدند');
+                }
+            }
+        }
+        
+        function editStudent(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            
+            const studentDetail = studentDetails[id] || {
+                books: [],
+                movies: [],
+                series: [],
+                studentCode: '',
+                city: '',
+                major: '',
+                isMarried: false,
+                hasChild: false,
+                hasJob: false,
+                sessionScores: {}
+            };
+            
+            document.getElementById('modalStudentId').value = id;
+            document.getElementById('modalStudentName').value = student.name;
+            document.getElementById('modalStudentCode').value = studentDetail.studentCode || '';
+            document.getElementById('modalCity').value = studentDetail.city || '';
+            document.getElementById('modalMajor').value = studentDetail.major || '';
+            document.getElementById('modalIsMarried').checked = studentDetail.isMarried || false;
+            document.getElementById('modalHasChild').checked = studentDetail.hasChild || false;
+            document.getElementById('modalHasJob').checked = studentDetail.hasJob || false;
+            
+            document.getElementById('modalIsMarriedPoints').value = studentDetail.isMarriedPoints || scoreConfig.isMarried;
+            document.getElementById('modalHasChildPoints').value = studentDetail.hasChildPoints || scoreConfig.hasChild;
+            document.getElementById('modalHasJobPoints').value = studentDetail.hasJobPoints || scoreConfig.hasJob;
+            
+            renderBooksList(studentDetail.books || []);
+            renderMoviesList(studentDetail.movies || []);
+            renderSeriesList(studentDetail.series || []);
+            renderCurrentSessionScores(id);
+            renderCustomSessionScores(id);
+            
+            updateModalScore(id);
+            
+            document.getElementById('studentModal').style.display = 'block';
+        }
+        
+        // تابع جدید برای به‌روزرسانی نام دانشجو
+        function updateStudentName() {
+            const studentId = document.getElementById('modalStudentId').value;
+            const newName = document.getElementById('modalStudentName').value;
+            
+            const student = students.find(s => s.id == studentId);
+            if (student) {
+                student.name = newName;
+                saveData();
+            }
+        }
+        
+        function renderBooksList(books) {
+            const booksList = document.getElementById('booksList');
+            booksList.innerHTML = '<button type="button" onclick="addBook()" class="btn btn-info">+ افزودن کتاب</button>';
+            
+            books.forEach((book, index) => {
+                const bookItem = document.createElement('div');
+                bookItem.className = 'dynamic-item';
+                bookItem.innerHTML = `
+                    <input type="text" placeholder="نام کتاب" value="${book.name}" onchange="updateBook(${index}, this.value)">
+                    <input type="number" placeholder="امتیاز" value="${book.points}" onchange="updateBookPoints(${index}, this.value)" style="width: 100px;">
+                    <button type="button" onclick="removeBook(${index})" class="btn btn-danger">حذف</button>
+                `;
+                booksList.appendChild(bookItem);
+            });
+        }
+        
+        function addBook() {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId] || {
+                books: [],
+                movies: [],
+                series: [],
+                studentCode: '',
+                city: '',
+                major: '',
+                isMarried: false,
+                hasChild: false,
+                hasJob: false,
+                sessionScores: {}
+            };
+            
+            studentDetail.books.push({ name: '', points: scoreConfig.shortBook });
+            studentDetails[studentId] = studentDetail;
+            renderBooksList(studentDetail.books);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+        }
+        
+        function updateBook(index, name) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail && studentDetail.books[index]) {
+                studentDetail.books[index].name = name;
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function updateBookPoints(index, points) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail && studentDetail.books[index]) {
+                studentDetail.books[index].points = parseFloat(points) || 0;
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function removeBook(index) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail) {
+                studentDetail.books.splice(index, 1);
+                renderBooksList(studentDetail.books);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function renderMoviesList(movies) {
+            const moviesList = document.getElementById('moviesList');
+            moviesList.innerHTML = '<button type="button" onclick="addMovie()" class="btn btn-info">+ افزودن فیلم</button>';
+            
+            movies.forEach((movie, index) => {
+                const movieItem = document.createElement('div');
+                movieItem.className = 'dynamic-item';
+                movieItem.innerHTML = `
+                    <input type="text" placeholder="نام فیلم" value="${movie.name}" onchange="updateMovie(${index}, this.value)">
+                    <input type="number" placeholder="امتیاز" value="${movie.points}" onchange="updateMoviePoints(${index}, this.value)" style="width: 100px;">
+                    <button type="button" onclick="removeMovie(${index})" class="btn btn-danger">حذف</button>
+                `;
+                moviesList.appendChild(movieItem);
+            });
+        }
+        
+        function addMovie() {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId] || {
+                books: [],
+                movies: [],
+                series: [],
+                studentCode: '',
+                city: '',
+                major: '',
+                isMarried: false,
+                hasChild: false,
+                hasJob: false,
+                sessionScores: {}
+            };
+            
+            studentDetail.movies.push({ name: '', points: scoreConfig.movie });
+            studentDetails[studentId] = studentDetail;
+            renderMoviesList(studentDetail.movies);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+        }
+        
+        function updateMovie(index, name) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail && studentDetail.movies[index]) {
+                studentDetail.movies[index].name = name;
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function updateMoviePoints(index, points) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail && studentDetail.movies[index]) {
+                studentDetail.movies[index].points = parseFloat(points) || 0;
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function removeMovie(index) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail) {
+                studentDetail.movies.splice(index, 1);
+                renderMoviesList(studentDetail.movies);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function renderSeriesList(series) {
+            const seriesList = document.getElementById('seriesList');
+            seriesList.innerHTML = '<button type="button" onclick="addSeries()" class="btn btn-info">+ افزودن سریال</button>';
+            
+            series.forEach((seriesItem, index) => {
+                const seriesElement = document.createElement('div');
+                seriesElement.className = 'dynamic-item';
+                seriesElement.innerHTML = `
+                    <input type="text" placeholder="نام سریال" value="${seriesItem.name}" onchange="updateSeries(${index}, this.value)">
+                    <input type="number" placeholder="امتیاز" value="${seriesItem.points}" onchange="updateSeriesPoints(${index}, this.value)" style="width: 100px;">
+                    <button type="button" onclick="removeSeries(${index})" class="btn btn-danger">حذف</button>
+                `;
+                seriesList.appendChild(seriesElement);
+            });
+        }
+        
+        function addSeries() {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId] || {
+                books: [],
+                movies: [],
+                series: [],
+                studentCode: '',
+                city: '',
+                major: '',
+                isMarried: false,
+                hasChild: false,
+                hasJob: false,
+                sessionScores: {}
+            };
+            
+            studentDetail.series.push({ name: '', points: scoreConfig.series });
+            studentDetails[studentId] = studentDetail;
+            renderSeriesList(studentDetail.series);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+        }
+        
+        function updateSeries(index, name) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail && studentDetail.series[index]) {
+                studentDetail.series[index].name = name;
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function updateSeriesPoints(index, points) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail && studentDetail.series[index]) {
+                studentDetail.series[index].points = parseFloat(points) || 0;
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function removeSeries(index) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            if (studentDetail) {
+                studentDetail.series.splice(index, 1);
+                renderSeriesList(studentDetail.series);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function renderCurrentSessionScores(studentId) {
+            const currentSessionScores = document.getElementById('currentSessionScores');
+            
+            if (!currentSessionId || !sessions.find(s => s.id == currentSessionId)) {
+                currentSessionScores.innerHTML = '<p style="color: #999; font-style: italic;">برای امتیازدهی جلسه، از قسمت جلسات روی دکمه "امتیازدهی" کلیک کنید</p>';
+                return;
+            }
+            
+            const session = sessions.find(s => s.id == currentSessionId);
+            const studentDetail = studentDetails[studentId] || {};
+            const sessionScore = (studentDetail.sessionScores && studentDetail.sessionScores[currentSessionId]) || {
+                extraClasses: false
+            };
+            
+            currentSessionScores.innerHTML = `
+                <h4 style="margin-bottom: 12px; color: #667eea;">جلسه: ${session.title} (${session.date})</h4>
+                <div class="dynamic-list">
+                    <div class="checkbox-group">
+                        <label>کلاس جبرانی</label>
+                        <input type="checkbox" ${sessionScore.extraClasses ? 'checked' : ''} onchange="updateCurrentSessionScore('extraClasses', this.checked)">
+                        <input type="number" value="${sessionScore.extraClassesPoints || scoreConfig.extraClasses}" onchange="updateCurrentSessionScorePoints('extraClasses', this.value)" style="width: 80px; margin-right: 10px;">
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderCustomSessionScores(studentId) {
+            const customScoresContainer = document.getElementById('customSessionScores');
+            
+            if (!currentSessionId || !sessions.find(s => s.id == currentSessionId)) {
+                customScoresContainer.innerHTML = '<button type="button" onclick="addCustomSessionScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button><p style="color: #999; font-style: italic; margin-top: 10px;">برای امتیازدهی جلسه، از قسمت جلسات روی دکمه "امتیازدهی" کلیک کنید</p>';
+                return;
+            }
+            
+            const studentDetail = studentDetails[studentId] || {};
+            const sessionScore = (studentDetail.sessionScores && studentDetail.sessionScores[currentSessionId]) || {};
+            const customScores = sessionScore.customScores || [];
+            
+            customScoresContainer.innerHTML = '<button type="button" onclick="addCustomSessionScore()" class="btn btn-info">+ افزودن امتیاز دلخواه</button>';
+            
+            customScores.forEach((customScore, index) => {
+                const scoreItem = document.createElement('div');
+                scoreItem.className = 'dynamic-item';
+                scoreItem.innerHTML = `
+                    <input type="text" placeholder="عنوان امتیاز (مثلاً: ارائه پروژه)" value="${customScore.label || ''}" onchange="updateCustomScoreLabel(${index}, this.value)" style="flex: 2;">
+                    <input type="number" placeholder="امتیاز" value="${customScore.points || 0}" onchange="updateCustomScorePoints(${index}, this.value)" style="width: 100px;">
+                    <button type="button" onclick="removeCustomScore(${index})" class="btn btn-danger">حذف</button>
+                `;
+                customScoresContainer.appendChild(scoreItem);
+            });
+        }
+        
+        function addCustomSessionScore() {
+            const studentId = document.getElementById('modalStudentId').value;
+            
+            if (!currentSessionId || !sessions.find(s => s.id == currentSessionId)) {
+                alert('لطفاً ابتدا از قسمت جلسات، یک جلسه را برای امتیازدهی انتخاب کنید');
+                return;
+            }
+            
+            if (!studentDetails[studentId]) {
+                studentDetails[studentId] = {
+                    books: [],
+                    movies: [],
+                    series: [],
+                    studentCode: '',
+                    city: '',
+                    major: '',
+                    isMarried: false,
+                    hasChild: false,
+                    hasJob: false,
+                    sessionScores: {}
+                };
+            }
+            
+            if (!studentDetails[studentId].sessionScores[currentSessionId]) {
+                studentDetails[studentId].sessionScores[currentSessionId] = {};
+            }
+            
+            if (!studentDetails[studentId].sessionScores[currentSessionId].customScores) {
+                studentDetails[studentId].sessionScores[currentSessionId].customScores = [];
+            }
+            
+            studentDetails[studentId].sessionScores[currentSessionId].customScores.push({
+                label: '',
+                points: 0
+            });
+            
+            renderCustomSessionScores(studentId);
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+        }
+        
+        function updateCustomScoreLabel(index, label) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            
+            if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores[index]) {
+                studentDetail.sessionScores[currentSessionId].customScores[index].label = label;
+            }
+        }
+        
+        function updateCustomScorePoints(index, points) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            
+            if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores[index]) {
+                studentDetail.sessionScores[currentSessionId].customScores[index].points = parseFloat(points) || 0;
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function removeCustomScore(index) {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId];
+            
+            if (studentDetail && studentDetail.sessionScores[currentSessionId] && studentDetail.sessionScores[currentSessionId].customScores) {
+                studentDetail.sessionScores[currentSessionId].customScores.splice(index, 1);
+                renderCustomSessionScores(studentId);
+                updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+            }
+        }
+        
+        function updateCurrentSessionScore(field, value) {
+            const studentId = document.getElementById('modalStudentId').value;
+            if (!studentDetails[studentId]) {
+                studentDetails[studentId] = {
+                    books: [],
+                    movies: [],
+                    series: [],
+                    studentCode: '',
+                    city: '',
+                    major: '',
+                    isMarried: false,
+                    hasChild: false,
+                    hasJob: false,
+                    sessionScores: {}
+                };
+            }
+            
+            if (!studentDetails[studentId].sessionScores[currentSessionId]) {
+                studentDetails[studentId].sessionScores[currentSessionId] = {};
+            }
+            
+            studentDetails[studentId].sessionScores[currentSessionId][field] = value;
+            
+            const pointsField = field + 'Points';
+            if (!studentDetails[studentId].sessionScores[currentSessionId][pointsField]) {
+                studentDetails[studentId].sessionScores[currentSessionId][pointsField] = scoreConfig[field];
+            }
+            
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+        }
+        
+        function updateCurrentSessionScorePoints(field, points) {
+            const studentId = document.getElementById('modalStudentId').value;
+            if (!studentDetails[studentId] || !studentDetails[studentId].sessionScores[currentSessionId]) return;
+            
+            studentDetails[studentId].sessionScores[currentSessionId][`${field}Points`] = parseFloat(points) || 0;
+            updateModalScoreFromModal(); // به‌روزرسانی امتیاز بلافاصله
+        }
+        
+        // تابع جدید: به‌روزرسانی امتیاز در مودال با استفاده از داده‌های فعلی در مودال
+        function updateModalScoreFromModal() {
+            const studentId = document.getElementById('modalStudentId').value;
+            if (!studentId) return;
+            
+            // محاسبه امتیاز بر اساس داده‌های فعلی در مودال
+            const totalScore = calculateModalScore();
+            document.getElementById('modalScore').textContent = `امتیاز کل: ${totalScore.toFixed(2)}`;
+        }
+        
+        // تابع جدید: محاسبه امتیاز بر اساس داده‌های فعلی در مودال
+        function calculateModalScore() {
+            const studentId = document.getElementById('modalStudentId').value;
+            if (!studentId) return 0;
+            
+            const student = students.find(s => s.id == studentId);
+            if (!student) return 0;
+            
+            let totalScore = 0;
+            
+            // محاسبه امتیاز بر اساس حضور و غیاب (همانند تابع اصلی)
+            const allClassSessions = sessions.filter(s => s.classId === student.classId);
+            allClassSessions.forEach(session => {
+                const attendanceRecord = attendance[session.id] && attendance[session.id][studentId];
+                
+                if (attendanceRecord) {
+                    if (typeof attendanceRecord === 'object') {
+                        if (attendanceRecord.present === true) {
+                            if (attendanceRecord.late) {
+                                totalScore += scoreConfig.lateArrival; // -0.25
+                            }
+                            if (attendanceRecord.writesNotes) {
+                                totalScore += scoreConfig.writesNotesInClass; // +0.25
+                            }
+                        } else {
+                            totalScore += scoreConfig.absent; // -1
+                        }
+                    } 
+                    else if (attendanceRecord === true) {
+                        // حاضر است - امتیاز تغییر نمی‌کند
+                    } else {
+                        totalScore += scoreConfig.absent; // -1
+                    }
+                } else {
+                    totalScore += scoreConfig.absent; // -1
+                }
+            });
+            
+            // امتیازات ثابت از مودال
+            if (document.getElementById('modalIsMarried').checked) {
+                totalScore += parseFloat(document.getElementById('modalIsMarriedPoints').value) || scoreConfig.isMarried;
+            }
+            
+            if (document.getElementById('modalHasChild').checked) {
+                totalScore += parseFloat(document.getElementById('modalHasChildPoints').value) || scoreConfig.hasChild;
+            }
+            
+            if (document.getElementById('modalHasJob').checked) {
+                totalScore += parseFloat(document.getElementById('modalHasJobPoints').value) || scoreConfig.hasJob;
+            }
+            
+            // کتاب‌ها از مودال
+            const bookInputs = document.querySelectorAll('#booksList .dynamic-item input[type="text"]');
+            const bookPointsInputs = document.querySelectorAll('#booksList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < bookInputs.length; i++) {
+                if (bookInputs[i].value.trim() !== '') {
+                    totalScore += parseFloat(bookPointsInputs[i].value) || 0;
+                }
+            }
+            
+            // فیلم‌ها از مودال
+            const movieInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="text"]');
+            const moviePointsInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < movieInputs.length; i++) {
+                if (movieInputs[i].value.trim() !== '') {
+                    totalScore += parseFloat(moviePointsInputs[i].value) || 0;
+                }
+            }
+            
+            // سریال‌ها از مودال
+            const seriesInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="text"]');
+            const seriesPointsInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < seriesInputs.length; i++) {
+                if (seriesInputs[i].value.trim() !== '') {
+                    totalScore += parseFloat(seriesPointsInputs[i].value) || 0;
+                }
+            }
+            
+            // امتیازات جلسه‌ای از مودال
+            if (currentSessionId && studentDetails[studentId] && studentDetails[studentId].sessionScores && studentDetails[studentId].sessionScores[currentSessionId]) {
+                const sessionScore = studentDetails[studentId].sessionScores[currentSessionId];
+                
+                if (sessionScore.extraClasses) {
+                    totalScore += sessionScore.extraClassesPoints || scoreConfig.extraClasses;
+                }
+                
+                if (sessionScore.customScores && Array.isArray(sessionScore.customScores)) {
+                    sessionScore.customScores.forEach(customScore => {
+                        if (customScore.label && customScore.label.trim() !== '') {
+                            totalScore += customScore.points || 0;
+                        }
+                    });
+                }
+            }
+            
+            return totalScore;
+        }
+        
+        function updateModalScore(studentId) {
+            const totalScore = calculateStudentScore(studentId);
+            document.getElementById('modalScore').textContent = `امتیاز کل: ${totalScore.toFixed(2)}`;
+        }
+        
+        function saveStudentDetails() {
+            const studentId = document.getElementById('modalStudentId').value;
+            const studentDetail = studentDetails[studentId] || {
+                books: [],
+                movies: [],
+                series: [],
+                studentCode: '',
+                city: '',
+                major: '',
+                isMarried: false,
+                hasChild: false,
+                hasJob: false,
+                sessionScores: {}
+            };
+            
+            studentDetail.studentCode = document.getElementById('modalStudentCode').value;
+            studentDetail.city = document.getElementById('modalCity').value;
+            studentDetail.major = document.getElementById('modalMajor').value;
+            studentDetail.isMarried = document.getElementById('modalIsMarried').checked;
+            studentDetail.hasChild = document.getElementById('modalHasChild').checked;
+            studentDetail.hasJob = document.getElementById('modalHasJob').checked;
+            
+            studentDetail.isMarriedPoints = parseFloat(document.getElementById('modalIsMarriedPoints').value) || scoreConfig.isMarried;
+            studentDetail.hasChildPoints = parseFloat(document.getElementById('modalHasChildPoints').value) || scoreConfig.hasChild;
+            studentDetail.hasJobPoints = parseFloat(document.getElementById('modalHasJobPoints').value) || scoreConfig.hasJob;
+            
+            // به‌روزرسانی کتاب‌ها از مودال
+            studentDetail.books = [];
+            const bookInputs = document.querySelectorAll('#booksList .dynamic-item input[type="text"]');
+            const bookPointsInputs = document.querySelectorAll('#booksList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < bookInputs.length; i++) {
+                studentDetail.books.push({
+                    name: bookInputs[i].value,
+                    points: parseFloat(bookPointsInputs[i].value) || 0
+                });
+            }
+            
+            // به‌روزرسانی فیلم‌ها از مودال
+            studentDetail.movies = [];
+            const movieInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="text"]');
+            const moviePointsInputs = document.querySelectorAll('#moviesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < movieInputs.length; i++) {
+                studentDetail.movies.push({
+                    name: movieInputs[i].value,
+                    points: parseFloat(moviePointsInputs[i].value) || 0
+                });
+            }
+            
+            // به‌روزرسانی سریال‌ها از مودال
+            studentDetail.series = [];
+            const seriesInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="text"]');
+            const seriesPointsInputs = document.querySelectorAll('#seriesList .dynamic-item input[type="number"]');
+            
+            for (let i = 0; i < seriesInputs.length; i++) {
+                studentDetail.series.push({
+                    name: seriesInputs[i].value,
+                    points: parseFloat(seriesPointsInputs[i].value) || 0
+                });
+            }
+            
+            if (currentSessionId && studentDetail.sessionScores && studentDetail.sessionScores[currentSessionId]) {
+                const currentSessionScore = studentDetail.sessionScores[currentSessionId];
+                
+                ['extraClasses'].forEach(field => {
+                    if (currentSessionScore[field] === undefined) {
+                        currentSessionScore[field] = false;
+                    }
+                });
+            }
+            
+            studentDetails[studentId] = studentDetail;
+            saveData();
+            renderStudents();
+            renderAttendanceList();
+            renderStats();
+            closeModal('studentModal');
+            alert('اطلاعات با موفقیت ذخیره شد');
+        }
+        
+        function renderAttendance() {
+            const classId = document.getElementById('attendanceClass').value;
+            currentClassId = classId;
+            const attendanceContent = document.getElementById('attendanceContent');
+            
+            if (!classId) {
+                attendanceContent.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            
+            if (classSessions.length === 0) {
+                attendanceContent.innerHTML = '<div class="empty-state">ابتدا جلسه‌ای برای این کلاس ایجاد کنید</div>';
+                return;
+            }
+            
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classStudents.length === 0) {
+                attendanceContent.innerHTML = '<div class="empty-state">ابتدا دانشجویی برای این کلاس اضافه کنید</div>';
+                return;
+            }
+            
+            let html = `
+                <div class="form-group">
+                    <label>انتخاب جلسه:</label>
+                    <select id="attendanceSession" onchange="renderAttendanceList()">
+                        ${classSessions.map(session => `<option value="${session.id}" ${currentSessionId == session.id ? 'selected' : ''}>${session.title} (${session.date})</option>`).join('')}
+                    </select>
+                </div>
+                
+                <!-- NEW: Search box for students -->
+                <div class="search-box">
+                    <input type="text" id="attendanceSearch" placeholder="جستجوی دانشجو..." 
+                           onkeyup="filterAttendanceList()" autocomplete="off">
+                </div>
+                
+                <div id="attendanceListContainer"></div>
+            `;
+            
+            attendanceContent.innerHTML = html;
+            renderAttendanceList();
+        }
+        
+        function renderAttendanceList() {
+            const sessionId = document.getElementById('attendanceSession').value;
+            currentSessionId = sessionId;
+            const container = document.getElementById('attendanceListContainer');
+            
+            if (!attendance[sessionId]) {
+                attendance[sessionId] = {};
+            }
+            
+            let classStudents = students.filter(student => student.classId == currentClassId);
+            
+            // مرتب‌سازی دانشجویان به ترتیب الفبایی
+            classStudents = sortStudentsAlphabetically(classStudents);
+            
+            // Apply search filter if there's a search query
+            if (attendanceSearchQuery) {
+                const query = attendanceSearchQuery.toLowerCase();
+                classStudents = classStudents.filter(student => 
+                    student.name.toLowerCase().includes(query)
+                );
+            }
+            
+            if (classStudents.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        ${attendanceSearchQuery ? 'هیچ دانشجویی با این نام یافت نشد' : 'هیچ دانشجویی در این کلاس وجود ندارد'}
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <h3 style="margin: 20px 0;">ثبت حضور و غیاب</h3>
+                <p style="margin-bottom: 15px; color: #666;">تیک بزنید برای دانشجویانی که <strong>حاضر</strong> هستند (پیش‌فرض همه غایب هستند)</p>
+                ${attendanceSearchQuery ? `<p style="color: #667eea; margin-bottom: 15px;">جستجو: "${attendanceSearchQuery}" - ${classStudents.length} دانشجو یافت شد</p>` : ''}
+                <div class="attendance-list">
+                    ${classStudents.map(student => {
+                        const isPresent = attendance[sessionId][student.id] === true || 
+                                         (attendance[sessionId][student.id] && attendance[sessionId][student.id].present === true);
+                        const isLate = (attendance[sessionId][student.id] && attendance[sessionId][student.id].late) || false;
+                        const writesNotes = (attendance[sessionId][student.id] && attendance[sessionId][student.id].writesNotes) || false;
+                        
+                        return `
+                            <div class="attendance-item">
+                                <input type="checkbox" id="attendance_${student.id}" ${isPresent ? 'checked' : ''} onchange="updateAttendance(${sessionId}, ${student.id}, this.checked)">
+                                <div class="attendance-icons">
+                                    <div class="icon-label">
+                                        <input type="checkbox" id="late_${student.id}" class="late-checkbox" ${isLate ? 'checked' : ''} onchange="updateLateStatus(${sessionId}, ${student.id}, this.checked)">
+                                        <label for="late_${student.id}">تأخیر</label>
+                                    </div>
+                                    <div class="icon-label">
+                                        <input type="checkbox" id="notes_${student.id}" class="notes-checkbox" ${writesNotes ? 'checked' : ''} onchange="updateNotesStatus(${sessionId}, ${student.id}, this.checked)">
+                                        <label for="notes_${student.id}">جزوه</label>
+                                    </div>
+                                </div>
+                                <span class="student-name-clickable" onclick="event.stopPropagation(); editStudentFromAttendance(${student.id})">${student.name}</span>
+                                <div class="score-badge">${calculateStudentScore(student.id).toFixed(2)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="margin-top: 20px;">
+                    <button onclick="saveAttendance()" class="btn btn-success">ذخیره حضور و غیاب</button>
+                    ${attendanceSearchQuery ? `<button onclick="clearAttendanceSearch()" class="btn btn-info">پاک کردن جستجو</button>` : ''}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // NEW: Function to filter attendance list based on search query
+        function filterAttendanceList() {
+            const searchInput = document.getElementById('attendanceSearch');
+            if (searchInput) {
+                attendanceSearchQuery = searchInput.value.trim();
+                renderAttendanceList();
+            }
+        }
+        
+        // NEW: Function to clear attendance search
+        function clearAttendanceSearch() {
+            attendanceSearchQuery = '';
+            const searchInput = document.getElementById('attendanceSearch');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            renderAttendanceList();
+        }
+        
+        function editStudentFromAttendance(studentId) {
+            editStudent(studentId);
+        }
+        
+        function updateAttendance(sessionId, studentId, isPresent) {
+            if (!attendance[sessionId]) {
+                attendance[sessionId] = {};
+            }
+            
+            if (isPresent) {
+                // اگر قبلاً رکوردی وجود ندارد، یک رکورد جدید ایجاد می‌کنیم
+                if (!attendance[sessionId][studentId] || typeof attendance[sessionId][studentId] === 'boolean') {
+                    attendance[sessionId][studentId] = {
+                        present: true,
+                        late: false,
+                        writesNotes: false
+                    };
+                } else {
+                    attendance[sessionId][studentId].present = true;
+                }
+            } else {
+                // اگر غایب است، فقط وضعیت present را false می‌کنیم
+                if (attendance[sessionId][studentId] && typeof attendance[sessionId][studentId] === 'object') {
+                    attendance[sessionId][studentId].present = false;
+                } else {
+                    attendance[sessionId][studentId] = false;
+                }
+            }
+            
+            saveData();
+            
+            const badge = document.querySelector(`#attendance_${studentId}`).parentElement.querySelector('.score-badge');
+            if (badge) {
+                badge.textContent = calculateStudentScore(studentId).toFixed(2);
+            }
+        }
+        
+        // تابع جدید برای به‌روزرسانی وضعیت تأخیر
+        function updateLateStatus(sessionId, studentId, isLate) {
+            if (!attendance[sessionId]) {
+                attendance[sessionId] = {};
+            }
+            
+            // اگر رکوردی وجود ندارد یا یک بولین است، یک رکورد جدید ایجاد می‌کنیم
+            if (!attendance[sessionId][studentId] || typeof attendance[sessionId][studentId] === 'boolean') {
+                attendance[sessionId][studentId] = {
+                    present: true, // هنگام تأخیر، حضور فعال می‌شود
+                    late: isLate,
+                    writesNotes: false
+                };
+            } else {
+                attendance[sessionId][studentId].late = isLate;
+                // اطمینان از فعال بودن چک‌باکس حضور
+                attendance[sessionId][studentId].present = true;
+            }
+            
+            saveData();
+            
+            const badge = document.querySelector(`#late_${studentId}`).parentElement.parentElement.querySelector('.score-badge');
+            if (badge) {
+                badge.textContent = calculateStudentScore(studentId).toFixed(2);
+            }
+            
+            // به‌روزرسانی چک‌باکس حضور
+            const attendanceCheckbox = document.querySelector(`#attendance_${studentId}`);
+            if (attendanceCheckbox) {
+                attendanceCheckbox.checked = true;
+            }
+        }
+        
+        // تابع جدید برای به‌روزرسانی وضعیت جزوه
+        function updateNotesStatus(sessionId, studentId, writesNotes) {
+            if (!attendance[sessionId]) {
+                attendance[sessionId] = {};
+            }
+            
+            // اگر رکوردی وجود ندارد یا یک بولین است، یک رکورد جدید ایجاد می‌کنیم
+            if (!attendance[sessionId][studentId] || typeof attendance[sessionId][studentId] === 'boolean') {
+                attendance[sessionId][studentId] = {
+                    present: true, // هنگام داشتن جزوه، حضور فعال می‌شود
+                    late: false,
+                    writesNotes: writesNotes
+                };
+            } else {
+                attendance[sessionId][studentId].writesNotes = writesNotes;
+                // اطمینان از فعال بودن چک‌باکس حضور
+                attendance[sessionId][studentId].present = true;
+            }
+            
+            saveData();
+            
+            const badge = document.querySelector(`#notes_${studentId}`).parentElement.parentElement.querySelector('.score-badge');
+            if (badge) {
+                badge.textContent = calculateStudentScore(studentId).toFixed(2);
+            }
+            
+            // به‌روزرسانی چک‌باکس حضور
+            const attendanceCheckbox = document.querySelector(`#attendance_${studentId}`);
+            if (attendanceCheckbox) {
+                attendanceCheckbox.checked = true;
+            }
+        }
+        
+        function saveAttendance() {
+            saveData();
+            renderStudents();
+            renderStats();
+            alert('حضور و غیاب با موفقیت ذخیره شد و امتیازات به‌روز شدند');
+        }
+        
+        // 🔥 تابع محاسبه امتیاز دانشجو - نسخه اصلاحی با اضافه شدن تأخیر و نوشتن جزوه
+        function calculateStudentScore(studentId) {
+            let totalScore = 0;
+            const student = students.find(s => s.id === studentId);
+            if (!student) return 0;
+            
+            const studentDetail = studentDetails[studentId] || {};
+            
+            // 🔥 محاسبه امتیاز غیبت برای تمام جلسات کلاس (بدون توجه به تاریخ ثبت‌نام)
+            const allClassSessions = sessions.filter(s => s.classId === student.classId);
+            allClassSessions.forEach(session => {
+                const attendanceRecord = attendance[session.id] && attendance[session.id][studentId];
+                
+                if (attendanceRecord) {
+                    // اگر رکورد حضور یک شیء است
+                    if (typeof attendanceRecord === 'object') {
+                        if (attendanceRecord.present === true) {
+                            // حاضر است - امتیاز تغییر نمی‌کند
+                            // بررسی تأخیر
+                            if (attendanceRecord.late) {
+                                totalScore += scoreConfig.lateArrival; // -0.25
+                            }
+                            // بررسی نوشتن جزوه
+                            if (attendanceRecord.writesNotes) {
+                                totalScore += scoreConfig.writesNotesInClass; // +0.25
+                            }
+                        } else {
+                            // غایب - امتیاز منفی
+                            totalScore += scoreConfig.absent; // -1
+                        }
+                    } 
+                    // اگر رکورد حضور یک بولین است (برای سازگاری با داده‌های قدیمی)
+                    else if (attendanceRecord === true) {
+                        // حاضر است - امتیاز تغییر نمی‌کند
+                    } else {
+                        // غایب - امتیاز منفی
+                        totalScore += scoreConfig.absent; // -1
+                    }
+                } else {
+                    // غایب - امتیاز منفی
+                    totalScore += scoreConfig.absent; // -1
+                }
+            });
+            
+            // امتیازات مثبت (کتاب، فیلم، وضعیت شخصی، etc.)
+            if (studentDetail.isMarried) {
+                totalScore += studentDetail.isMarriedPoints || scoreConfig.isMarried;
+            }
+            
+            if (studentDetail.hasChild) {
+                totalScore += studentDetail.hasChildPoints || scoreConfig.hasChild;
+            }
+            
+            if (studentDetail.hasJob) {
+                totalScore += studentDetail.hasJobPoints || scoreConfig.hasJob;
+            }
+            
+            if (studentDetail.books) {
+                studentDetail.books.forEach(book => {
+                    if (book.name.trim() !== '') {
+                        totalScore += book.points || 0;
+                    }
+                });
+            }
+            
+            if (studentDetail.movies) {
+                studentDetail.movies.forEach(movie => {
+                    if (movie.name.trim() !== '') {
+                        totalScore += movie.points || 0;
+                    }
+                });
+            }
+            
+            if (studentDetail.series) {
+                studentDetail.series.forEach(series => {
+                    if (series.name.trim() !== '') {
+                        totalScore += series.points || 0;
+                    }
+                });
+            }
+            
+            // امتیازات جلسه‌ای (مثبت)
+            if (studentDetail.sessionScores) {
+                Object.keys(studentDetail.sessionScores).forEach(sessionId => {
+                    const sessionScore = studentDetail.sessionScores[sessionId];
+                    
+                    if (sessionScore.extraClasses) {
+                        totalScore += sessionScore.extraClassesPoints || scoreConfig.extraClasses;
+                    }
+                    
+                    if (sessionScore.customScores && Array.isArray(sessionScore.customScores)) {
+                        sessionScore.customScores.forEach(customScore => {
+                            if (customScore.label && customScore.label.trim() !== '') {
+                                totalScore += customScore.points || 0;
+                            }
+                        });
+                    }
+                });
+            }
+            
+            return totalScore;
+        }
+        
+        // 🔥 تابع آمار و گزارشات - نسخه اصلاحی
+        function renderStats() {
+            const classId = document.getElementById('reportClass').value;
+            currentClassId = classId;
+            const statsGrid = document.getElementById('statsGrid');
+            
+            if (!classId) {
+                statsGrid.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            const totalSessions = classSessions.length;
+            const totalStudents = classStudents.length;
+            
+            // 🔥 محاسبه جدید میانگین حضور
+            let totalPossibleAttendance = totalSessions * totalStudents;
+            let totalAttendance = 0;
+            
+            classSessions.forEach(session => {
+                classStudents.forEach(student => {
+                    const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
+                    if (attendanceRecord) {
+                        if (typeof attendanceRecord === 'object' && attendanceRecord.present === true) {
+                            totalAttendance++;
+                        } else if (attendanceRecord === true) {
+                            totalAttendance++;
+                        }
+                    }
+                });
+            });
+            
+            const avgAttendance = totalPossibleAttendance > 0 ? 
+                ((totalAttendance / totalPossibleAttendance) * 100) : 0;
+            
+            // محاسبه امتیازات
+            let totalScore = 0;
+            let highestScore = -Infinity;
+            let lowestScore = Infinity;
+            
+            classStudents.forEach(student => {
+                const score = calculateStudentScore(student.id);
+                totalScore += score;
+                if (score > highestScore) highestScore = score;
+                if (score < lowestScore) lowestScore = score;
+            });
+            
+            const avgScore = classStudents.length > 0 ? (totalScore / classStudents.length) : 0;
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${totalStudents}</div>
+                    <div class="stat-label">تعداد دانشجویان</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${totalSessions}</div>
+                    <div class="stat-label">تعداد جلسات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${avgAttendance.toFixed(1)}%</div>
+                    <div class="stat-label">میانگین حضور</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${avgScore.toFixed(2)}</div>
+                    <div class="stat-label">میانگین امتیازات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${highestScore.toFixed(2)}</div>
+                    <div class="stat-label">بالاترین امتیاز</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${lowestScore.toFixed(2)}</div>
+                    <div class="stat-label">پایین‌ترین امتیاز</div>
+                </div>
+            `;
+        }
+        
+        // تابع جدید: مدیریت جزوه‌ها
+        function renderNotesManagement() {
+            const classId = document.getElementById('notesClass').value;
+            currentClassId = classId;
+            const notesContent = document.getElementById('notesContent');
+            
+            if (!classId) {
+                notesContent.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classSessions.length === 0) {
+                notesContent.innerHTML = '<div class="empty-state">ابتدا جلسه‌ای برای این کلاس ایجاد کنید</div>';
+                return;
+            }
+            
+            if (classStudents.length === 0) {
+                notesContent.innerHTML = '<div class="empty-state">ابتدا دانشجویی برای این کلاس اضافه کنید</div>';
+                return;
+            }
+            
+            // مرتب‌سازی دانشجویان به ترتیب الفبایی
+            let sortedStudents = sortStudentsAlphabetically([...classStudents]);
+            
+            let html = `
+                <h3 style="margin-bottom: 20px;">مدیریت جزوه‌های دانشجویان</h3>
+                <p style="margin-bottom: 15px; color: #666;">برای هر دانشجو، جلساتی که جزوه داشته را انتخاب کنید:</p>
+                <div class="notes-grid">
+            `;
+            
+            sortedStudents.forEach(student => {
+                if (!studentNotes[student.id]) {
+                    studentNotes[student.id] = {};
+                }
+                
+                const studentSessionsWithNotes = [];
+                classSessions.forEach(session => {
+                    if (studentNotes[student.id][session.id]) {
+                        studentSessionsWithNotes.push({
+                            id: session.id,
+                            title: session.title,
+                            date: session.date
+                        });
+                    }
+                });
+                
+                html += `
+                    <div class="notes-item">
+                        <div class="notes-header">
+                            <div class="notes-title">${student.name}</div>
+                            <button onclick="openNotesModal(${student.id})" class="btn btn-info">ویرایش جزوه‌ها</button>
+                        </div>
+                        <p><strong>تعداد جلسات با جزوه:</strong> ${studentSessionsWithNotes.length} از ${classSessions.length}</p>
+                        <div class="notes-session-list">
+                            ${studentSessionsWithNotes.length > 0 ? 
+                                studentSessionsWithNotes.map(session => 
+                                    `<div>${session.title} (${session.date})</div>`
+                                ).join('') : 
+                                '<div style="color: #999; font-style: italic;">هیچ جلسه‌ای با جزوه ثبت نشده است</div>'
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            notesContent.innerHTML = html;
+        }
+        
+        // تابع جدید: باز کردن مودال ویرایش جزوه‌ها برای یک دانشجو
+        function openNotesModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            const classSessions = sessions.filter(session => session.classId == student.classId);
+            
+            let modalHtml = `
+                <div id="notesModal" class="modal" style="display: block;">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeModal('notesModal')">&times;</span>
+                        <h2>مدیریت جزوه‌های ${student.name}</h2>
+                        <p style="margin-bottom: 20px; color: #666;">جلساتی که دانشجو جزوه داشته را انتخاب کنید:</p>
+                        <div id="notesSessionsList" style="max-height: 400px; overflow-y: auto;">
+            `;
+            
+            if (!studentNotes[studentId]) {
+                studentNotes[studentId] = {};
+            }
+            
+            classSessions.forEach(session => {
+                const hasNotes = studentNotes[studentId][session.id] || false;
+                modalHtml += `
+                    <div class="session-checkbox-item">
+                        <label>${session.title} (${session.date})</label>
+                        <input type="checkbox" id="notes_session_${session.id}" ${hasNotes ? 'checked' : ''} 
+                               onchange="updateStudentNotes(${studentId}, ${session.id}, this.checked)">
+                    </div>
+                `;
+            });
+            
+            modalHtml += `
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <button onclick="saveAllNotes(${studentId})" class="btn btn-success">ذخیره تمام جزوه‌ها</button>
+                            <button onclick="closeModal('notesModal')" class="btn btn-danger">انصراف</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // اضافه کردن مودال به صفحه
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHtml;
+            document.body.appendChild(modalContainer);
+        }
+        
+        // تابع جدید: به‌روزرسانی وضعیت جزوه برای یک جلسه خاص
+        function updateStudentNotes(studentId, sessionId, hasNotes) {
+            if (!studentNotes[studentId]) {
+                studentNotes[studentId] = {};
+            }
+            studentNotes[studentId][sessionId] = hasNotes;
+        }
+        
+        // تابع جدید: ذخیره تمام جزوه‌ها برای یک دانشجو
+        function saveAllNotes(studentId) {
+            saveData();
+            renderNotesManagement();
+            closeModal('notesModal');
+            alert('جزوه‌ها با موفقیت ذخیره شدند');
+        }
+        
+        function exportToExcel() {
+            const classId = document.getElementById('reportClass').value;
+            if (!classId) {
+                alert('لطفاً یک کلاس انتخاب کنید');
+                return;
+            }
+            
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classStudents.length === 0) {
+                alert('هیچ دانشجویی برای خروجی وجود ندارد');
+                return;
+            }
+            
+            const currentClass = classes.find(cls => cls.id == classId);
+            const className = currentClass ? currentClass.name : 'کلاس';
+            
+            const wb = XLSX.utils.book_new();
+            
+            const studentData = classStudents.map(student => {
+                const studentDetail = studentDetails[student.id] || {};
+                const totalScore = calculateStudentScore(student.id);
+                
+                let fixedScores = 0;
+                if (studentDetail.isMarried) fixedScores += (studentDetail.isMarriedPoints || scoreConfig.isMarried);
+                if (studentDetail.hasChild) fixedScores += (studentDetail.hasChildPoints || scoreConfig.hasChild);
+                if (studentDetail.hasJob) fixedScores += (studentDetail.hasJobPoints || scoreConfig.hasJob);
+                
+                let booksScore = 0;
+                if (studentDetail.books) {
+                    studentDetail.books.forEach(book => {
+                        if (book.name.trim() !== '') booksScore += book.points || 0;
+                    });
+                }
+                
+                let moviesScore = 0;
+                if (studentDetail.movies) {
+                    studentDetail.movies.forEach(movie => {
+                        if (movie.name.trim() !== '') moviesScore += movie.points || 0;
+                    });
+                }
+                
+                let seriesScore = 0;
+                if (studentDetail.series) {
+                    studentDetail.series.forEach(s => {
+                        if (s.name.trim() !== '') seriesScore += s.points || 0;
+                    });
+                }
+                
+                let sessionScoresTotal = 0;
+                if (studentDetail.sessionScores) {
+                    Object.keys(studentDetail.sessionScores).forEach(sessionId => {
+                        const ss = studentDetail.sessionScores[sessionId];
+                        if (ss.extraClasses) sessionScoresTotal += ss.extraClassesPoints || scoreConfig.extraClasses;
+                        
+                        if (ss.customScores && Array.isArray(ss.customScores)) {
+                            ss.customScores.forEach(cs => {
+                                if (cs.label && cs.label.trim() !== '') {
+                                    sessionScoresTotal += cs.points || 0;
+                                }
+                            });
+                        }
+                    });
+                }
+                
+                // محاسبه امتیاز غیبت و تأخیر
+                const allClassSessions = sessions.filter(s => s.classId === student.classId);
+                let absenceScore = 0;
+                let lateScore = 0;
+                let notesScore = 0;
+                
+                allClassSessions.forEach(session => {
+                    const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
+                    
+                    if (attendanceRecord) {
+                        if (typeof attendanceRecord === 'object') {
+                            if (attendanceRecord.present !== true) {
+                                absenceScore += scoreConfig.absent;
+                            }
+                            if (attendanceRecord.late) {
+                                lateScore += scoreConfig.lateArrival;
+                            }
+                            if (attendanceRecord.writesNotes) {
+                                notesScore += scoreConfig.writesNotesInClass;
+                            }
+                        } else if (attendanceRecord === false) {
+                            absenceScore += scoreConfig.absent;
+                        }
+                    } else {
+                        absenceScore += scoreConfig.absent;
+                    }
+                });
+                
+                // محاسبه تعداد جلسات با جزوه
+                let notesCount = 0;
+                if (studentNotes[student.id]) {
+                    const allSessions = sessions.filter(s => s.classId === student.classId);
+                    notesCount = allSessions.filter(session => studentNotes[student.id][session.id]).length;
+                }
+                
+                return {
+                    'نام دانشجو': student.name,
+                    'کد دانشجویی': studentDetail.studentCode || '',
+                    'توضیحات': student.notes,
+                    'شهر': studentDetail.city || '',
+                    'رشته اصلی': studentDetail.major || '',
+                    'متأهل': studentDetail.isMarried ? 'بله' : 'خیر',
+                    'فرزند': studentDetail.hasChild ? 'بله' : 'خیر',
+                    'شغل': studentDetail.hasJob ? 'بله' : 'خیر',
+                    'امتیاز ثابت': fixedScores,
+                    'کتاب‌ها': (studentDetail.books || []).map(b => b.name).filter(n => n.trim()).join(', '),
+                    'امتیاز کتاب‌ها': booksScore,
+                    'فیلم‌ها': (studentDetail.movies || []).map(m => m.name).filter(n => n.trim()).join(', '),
+                    'امتیاز فیلم‌ها': moviesScore,
+                    'سریال‌ها': (studentDetail.series || []).map(s => s.name).filter(n => n.trim()).join(', '),
+                    'امتیاز سریال‌ها': seriesScore,
+                    'امتیاز جلسات': sessionScoresTotal,
+                    'امتیاز غیبت': absenceScore,
+                    'امتیاز تأخیر': lateScore,
+                    'امتیاز جزوه': notesScore,
+                    'تعداد جلسات با جزوه': notesCount,
+                    'امتیاز کل': totalScore
+                };
+            });
+            
+            const ws = XLSX.utils.json_to_sheet(studentData);
+            XLSX.utils.book_append_sheet(wb, ws, 'دانشجویان');
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            
+            if (classSessions.length > 0) {
+                const attendanceData = [];
+                
+                classStudents.forEach(student => {
+                    const row = { 
+                        'نام دانشجو': student.name,
+                        'کد دانشجویی': (studentDetails[student.id] || {}).studentCode || ''
+                    };
+                    
+                    classSessions.forEach(session => {
+                        const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
+                        let status = 'غایب';
+                        
+                        if (attendanceRecord) {
+                            if (typeof attendanceRecord === 'object') {
+                                if (attendanceRecord.present === true) {
+                                    status = 'حاضر';
+                                    if (attendanceRecord.late) status += ' (تأخیر)';
+                                    if (attendanceRecord.writesNotes) status += ' (جزوه)';
+                                }
+                            } else if (attendanceRecord === true) {
+                                status = 'حاضر';
+                            }
+                        }
+                        
+                        row[`${session.title} (${session.date})`] = status;
+                    });
+                    
+                    attendanceData.push(row);
+                });
+                
+                const ws2 = XLSX.utils.json_to_sheet(attendanceData);
+                XLSX.utils.book_append_sheet(wb, ws2, 'حضور و غیاب');
+            }
+            
+            // برگه جزوه‌ها
+            const notesData = [];
+            classStudents.forEach(student => {
+                const row = {
+                    'نام دانشجو': student.name,
+                    'کد دانشجویی': (studentDetails[student.id] || {}).studentCode || ''
+                };
+                
+                const studentNoteSessions = [];
+                if (studentNotes[student.id]) {
+                    classSessions.forEach(session => {
+                        if (studentNotes[student.id][session.id]) {
+                            studentNoteSessions.push(`${session.title} (${session.date})`);
+                        }
+                    });
+                }
+                
+                row['جلسات با جزوه'] = studentNoteSessions.join('، ');
+                row['تعداد جلسات با جزوه'] = studentNoteSessions.length;
+                
+                notesData.push(row);
+            });
+            
+            if (notesData.length > 0) {
+                const ws3 = XLSX.utils.json_to_sheet(notesData);
+                XLSX.utils.book_append_sheet(wb, ws3, 'جزوه‌ها');
+            }
+            
+            XLSX.writeFile(wb, `استادیار_گزارش_${className}.xlsx`);
+        }
+        
+        // توابع جدید برای مدیریت JSON
+        function updateJSONOutput() {
+            const data = {
+                classes,
+                sessions,
+                students,
+                attendance,
+                studentDetails,
+                studentNotes,
+                exportDate: new Date().toISOString(),
+                version: '1.1'
+            };
+            
+            document.getElementById('jsonOutput').value = JSON.stringify(data, null, 2);
+        }
+        
+        function exportToJSON() {
+            const data = {
+                classes,
+                sessions,
+                students,
+                attendance,
+                studentDetails,
+                studentNotes,
+                exportDate: new Date().toISOString(),
+                version: '1.1'
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `استادیار_پشتیبان_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+        
+        function copyJSON() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.select();
+            document.execCommand('copy');
+            alert('JSON با موفقیت کپی شد');
+        }
+        
+        function importFromJSON() {
+            const jsonInput = document.getElementById('jsonInput').value;
+            const importType = document.getElementById('importType').value;
+            
+            if (!jsonInput.trim()) {
+                alert('لطفاً JSON را وارد کنید یا فایل انتخاب کنید');
+                return;
+            }
+            
+            try {
+                const importedData = JSON.parse(jsonInput);
+                
+                // اعتبارسنجی ساختار داده
+                if (!importedData.classes || !importedData.sessions || !importedData.students || !importedData.attendance || !importedData.studentDetails) {
+                    throw new Error('ساختار JSON نامعتبر است');
+                }
+                
+                if (importType === 'replace') {
+                    // جایگزینی کامل اطلاعات
+                    classes = importedData.classes;
+                    sessions = importedData.sessions;
+                    students = importedData.students;
+                    attendance = importedData.attendance;
+                    studentDetails = importedData.studentDetails;
+                    studentNotes = importedData.studentNotes || {};
+                } else {
+                    // ادغام اطلاعات
+                    classes = [...classes, ...importedData.classes];
+                    sessions = [...sessions, ...importedData.sessions];
+                    students = [...students, ...importedData.students];
+                    
+                    // ادغام attendance
+                    Object.keys(importedData.attendance).forEach(sessionId => {
+                        if (!attendance[sessionId]) {
+                            attendance[sessionId] = {};
+                        }
+                        Object.assign(attendance[sessionId], importedData.attendance[sessionId]);
+                    });
+                    
+                    // ادغام studentDetails
+                    Object.assign(studentDetails, importedData.studentDetails);
+                    
+                    // ادغام studentNotes
+                    Object.assign(studentNotes, importedData.studentNotes || {});
+                }
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                renderSessions();
+                renderStudents();
+                renderAttendance();
+                renderNotesManagement();
+                renderStats();
+                
+                closeModal('importModal');
+                alert('اطلاعات با موفقیت وارد شد');
+            } catch (error) {
+                alert('خطا در وارد کردن JSON: ' + error.message);
+            }
+        }
+
+        // تابع پیش‌نمایش داده‌های Excel
+        function previewExcelData(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    let previewHtml = '<div style="direction: rtl; text-align: right;">';
+                    
+                    // پیش‌نمایش برگه دانشجویان
+                    if (workbook.Sheets['دانشجویان']) {
+                        const studentData = XLSX.utils.sheet_to_json(workbook.Sheets['دانشجویان']);
+                        previewHtml += `<h5 style="color: #667eea; margin: 15px 0 10px 0;">دانشجویان (${studentData.length} نفر)</h5>`;
+                        if (studentData.length > 0) {
+                            previewHtml += `<table style="width: 100%; border-collapse: collapse; font-size: 12px;">`;
+                            previewHtml += `<tr style="background: #f8f9fa;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">نام</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">کد دانشجویی</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">شهر</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">امتیاز کل</th>
+                            </tr>`;
+                            studentData.slice(0, 5).forEach(student => {
+                                previewHtml += `<tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['نام دانشجو'] || ''}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['کد دانشجویی'] || ''}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['شهر'] || ''}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${student['امتیاز کل'] || ''}</td>
+                                </tr>`;
+                            });
+                            if (studentData.length > 5) {
+                                previewHtml += `<tr><td colspan="4" style="border: 1px solid #ddd; padding: 8px; text-align: center; color: #666;">و ${studentData.length - 5} دانشجوی دیگر...</td></tr>`;
+                            }
+                            previewHtml += `</table>`;
+                        }
+                    } else {
+                        previewHtml += `<p style="color: #dc3545;">❌ برگه "دانشجویان" در فایل Excel یافت نشد</p>`;
+                    }
+                    
+                    // پیش‌نمایش برگه حضور و غیاب
+                    if (workbook.Sheets['حضور و غیاب']) {
+                        const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
+                        previewHtml += `<h5 style="color: #667eea; margin: 15px 0 10px 0;">حضور و غیاب (${attendanceData.length} رکورد)</h5>`;
+                        if (attendanceData.length > 0) {
+                            const sessionCount = Object.keys(attendanceData[0]).length - 2; // کم کردن ستون‌های نام و کد
+                            previewHtml += `<p>${sessionCount} جلسه حضور و غیاب شناسایی شد</p>`;
+                        }
+                    } else {
+                        previewHtml += `<p style="color: #dc3545;">❌ برگه "حضور و غیاب" در فایل Excel یافت نشد</p>`;
+                    }
+                    
+                    previewHtml += '</div>';
+                    document.getElementById('previewContent').innerHTML = previewHtml;
+                    document.getElementById('excelImportPreview').style.display = 'block';
+                    
+                } catch (error) {
+                    alert('خطا در خواندن فایل Excel: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // تابع اصلی وارد کردن از Excel - نسخه اصلاح شده
+        function importFromExcel() {
+            const fileInput = document.getElementById('excelFileInput');
+            const importType = document.getElementById('excelImportType').value;
+            
+            if (!fileInput.files[0]) {
+                alert('لطفاً یک فایل Excel انتخاب کنید');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    if (importType === 'replace') {
+                        // بازنشانی همه داده‌ها
+                        classes = [];
+                        sessions = [];
+                        students = [];
+                        attendance = {};
+                        studentDetails = {};
+                        studentNotes = {};
+                    }
+                    
+                    // ایجاد یک کلاس پیش‌فرض اگر هیچ کلاسی وجود ندارد
+                    if (classes.length === 0) {
+                        const defaultClass = {
+                            id: Date.now(),
+                            name: 'کلاس وارد شده از اکسل',
+                            description: 'این کلاس از طریق فایل Excel وارد شده است'
+                        };
+                        classes.push(defaultClass);
+                    }
+                    
+                    const targetClassId = classes[0].id; // استفاده از اولین کلاس موجود
+                    
+                    // پردازش برگه دانشجویان
+                    if (workbook.Sheets['دانشجویان']) {
+                        const studentData = XLSX.utils.sheet_to_json(workbook.Sheets['دانشجویان']);
+                        console.log('دانشجویان یافت شده در Excel:', studentData.length);
+                        
+                        studentData.forEach((excelStudent, index) => {
+                            const studentName = excelStudent['نام دانشجو'];
+                            if (!studentName) return;
+                            
+                            let student;
+                            
+                            if (importType === 'replace') {
+                                // ایجاد دانشجوی جدید در حالت جایگزینی
+                                student = {
+                                    id: Date.now() + index,
+                                    classId: targetClassId,
+                                    name: studentName,
+                                    notes: excelStudent['توضیحات'] || ''
+                                };
+                                students.push(student);
+                            } else {
+                                // در حالت ادغام، یافتن دانشجوی موجود یا ایجاد جدید
+                                student = students.find(s => s.name === studentName);
+                                
+                                if (!student) {
+                                    student = {
+                                        id: Date.now() + index,
+                                        classId: targetClassId,
+                                        name: studentName,
+                                        notes: excelStudent['توضیحات'] || ''
+                                    };
+                                    students.push(student);
+                                }
+                            }
+                            
+                            // همیشه به‌روزرسانی جزئیات دانشجو
+                            if (!studentDetails[student.id]) {
+                                studentDetails[student.id] = {
+                                    books: [],
+                                    movies: [],
+                                    series: [],
+                                    studentCode: '',
+                                    city: '',
+                                    major: '',
+                                    isMarried: false,
+                                    hasChild: false,
+                                    hasJob: false,
+                                    sessionScores: {}
+                                };
+                            }
+                            
+                            const detail = studentDetails[student.id];
+                            detail.studentCode = excelStudent['کد دانشجویی'] || '';
+                            detail.city = excelStudent['شهر'] || '';
+                            detail.major = excelStudent['رشته اصلی'] || '';
+                            detail.isMarried = excelStudent['متأهل'] === 'بله';
+                            detail.hasChild = excelStudent['فرزند'] === 'بله';
+                            detail.hasJob = excelStudent['شغل'] === 'بله';
+                            
+                            // پردازش کتاب‌ها
+                            if (excelStudent['کتاب‌ها'] && excelStudent['کتاب‌ها'].trim() !== '') {
+                                detail.books = excelStudent['کتاب‌ها'].split(',').map(book => ({
+                                    name: book.trim(),
+                                    points: parseFloat(excelStudent['امتیاز کتاب‌ها']) || scoreConfig.shortBook
+                                })).filter(book => book.name && book.name.trim() !== '');
+                            }
+                            
+                            // پردازش فیلم‌ها
+                            if (excelStudent['فیلم‌ها'] && excelStudent['فیلم‌ها'].trim() !== '') {
+                                detail.movies = excelStudent['فیلم‌ها'].split(',').map(movie => ({
+                                    name: movie.trim(),
+                                    points: parseFloat(excelStudent['امتیاز فیلم‌ها']) || scoreConfig.movie
+                                })).filter(movie => movie.name && movie.name.trim() !== '');
+                            }
+                            
+                            // پردازش سریال‌ها
+                            if (excelStudent['سریال‌ها'] && excelStudent['سریال‌ها'].trim() !== '') {
+                                detail.series = excelStudent['سریال‌ها'].split(',').map(series => ({
+                                    name: series.trim(),
+                                    points: parseFloat(excelStudent['امتیاز سریال‌ها']) || scoreConfig.series
+                                })).filter(series => series.name && series.name.trim() !== '');
+                            }
+                            
+                            // پردازش جزوه‌ها
+                            if (excelStudent['تعداد جلسات با جزوه'] && parseInt(excelStudent['تعداد جلسات با جزوه']) > 0) {
+                                // این قسمت نیاز به منطق پیچیده‌تری دارد که بستگی به ساختار داده دارد
+                            }
+                            
+                            console.log('دانشجو پردازش شد:', student.name);
+                        });
+                    }
+                    
+                    // پردازش برگه حضور و غیاب
+                    if (workbook.Sheets['حضور و غیاب']) {
+                        const attendanceData = XLSX.utils.sheet_to_json(workbook.Sheets['حضور و غیاب']);
+                        console.log('رکوردهای حضور و غیاب یافت شده:', attendanceData.length);
+                        
+                        // استخراج نام جلسات از ستون‌ها
+                        if (attendanceData.length > 0) {
+                            const firstRow = attendanceData[0];
+                            const sessionColumns = Object.keys(firstRow).filter(key => 
+                                key !== 'نام دانشجو' && key !== 'کد دانشجویی'
+                            );
+                            
+                            console.log('جلسات شناسایی شده:', sessionColumns);
+                            
+                            sessionColumns.forEach(sessionColumn => {
+                                // استخراج تاریخ از نام ستون
+                                let sessionTitle = sessionColumn;
+                                let sessionDate = '1403/01/01'; // تاریخ پیش‌فرض
+                                
+                                // استخراج تاریخ از پرانتز
+                                const dateMatch = sessionColumn.match(/\(([^)]+)\)/);
+                                if (dateMatch) {
+                                    sessionDate = dateMatch[1];
+                                    sessionTitle = sessionColumn.replace(/\([^)]+\)/, '').trim();
+                                }
+                                
+                                // ایجاد جلسه جدید
+                                const session = {
+                                    id: Date.now() + Math.random(),
+                                    classId: targetClassId,
+                                    title: sessionTitle,
+                                    date: sessionDate,
+                                    description: 'وارد شده از Excel'
+                                };
+                                sessions.push(session);
+                                
+                                // تنظیم حضور و غیاب برای این جلسه
+                                attendanceData.forEach(row => {
+                                    const studentName = row['نام دانشجو'];
+                                    if (!studentName) return;
+                                    
+                                    const student = students.find(s => s.name === studentName);
+                                    
+                                    if (student) {
+                                        if (!attendance[session.id]) {
+                                            attendance[session.id] = {};
+                                        }
+                                        
+                                        const status = row[sessionColumn];
+                                        if (status === 'حاضر') {
+                                            attendance[session.id][student.id] = {
+                                                present: true,
+                                                late: false,
+                                                writesNotes: false
+                                            };
+                                        } else if (status.includes('حاضر')) {
+                                            // اگر شامل اطلاعات اضافی است
+                                            const isLate = status.includes('تأخیر');
+                                            const writesNotes = status.includes('جزوه');
+                                            
+                                            attendance[session.id][student.id] = {
+                                                present: true,
+                                                late: isLate,
+                                                writesNotes: writesNotes
+                                            };
+                                        } else {
+                                            attendance[session.id][student.id] = false;
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    }
+                    
+                    saveData();
+                    renderClasses();
+                    renderClassSelectors();
+                    renderSessions();
+                    renderStudents();
+                    renderAttendance();
+                    renderNotesManagement();
+                    renderStats();
+                    
+                    closeModal('excelImportModal');
+                    alert(`اطلاعات با موفقیت از فایل Excel وارد شد\n\nتعداد دانشجویان: ${students.length}\nتعداد جلسات: ${sessions.length}`);
+                    
+                } catch (error) {
+                    console.error('خطای وارد کردن Excel:', error);
+                    alert('خطا در وارد کردن اطلاعات از Excel: ' + error.message);
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        function resetData() {
+            if (confirm('⚠️ هشدار!\n\nآیا از بازنشانی کامل همه اطلاعات اطمینان دارید؟\n\nتمام کلاس‌ها، جلسات، دانشجویان و اطلاعات مرتبط پاک خواهد شد.\n\nاین عملیات قابل بازگشت نیست!')) {
+                classes = [];
+                sessions = [];
+                students = [];
+                attendance = {};
+                studentDetails = {};
+                studentNotes = {};
+                
+                saveData();
+                renderClasses();
+                renderClassSelectors();
+                renderSessions();
+                renderStudents();
+                renderAttendance();
+                renderNotesManagement();
+                renderStats();
+                
+                alert('✓ همه اطلاعات با موفقیت بازنشانی شدند');
+            }
+        }
+        
+        function saveData() {
+            const data = {
+                classes,
+                sessions,
+                students,
+                attendance,
+                studentDetails,
+                studentNotes
+            };
+            
+            localStorage.setItem('استادیار', JSON.stringify(data));
+        }
+        
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem('استادیار'));
+            
+            if (data) {
+                classes = data.classes || [];
+                sessions = data.sessions || [];
+                students = data.students || [];
+                attendance = data.attendance || {};
+                studentDetails = data.studentDetails || {};
+                studentNotes = data.studentNotes || {};
+            }
+        }
+        
+        function gregorianToJalali(gy, gm, gd) {
+            var g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+            var jy = (gy <= 1600) ? 0 : 979;
+            gy -= (gy <= 1600) ? 621 : 1600;
+            var gy2 = (gm > 2) ? (gy + 1) : gy;
+            var days = (365 * gy) + (parseInt((gy2 + 3) / 4)) - (parseInt((gy2 + 99) / 100)) + (parseInt((gy2 + 399) / 400)) - 80 + gd + g_d_m[gm - 1];
+            jy += 33 * (parseInt(days / 12053));
+            days %= 12053;
+            jy += 4 * (parseInt(days / 1461));
+            days %= 1461;
+            jy += parseInt((days - 1) / 365);
+            if (days > 365) days = (days - 1) % 365;
+            var jm = (days < 186) ? 1 + parseInt(days / 31) : 7 + parseInt((days - 186) / 30);
+            var jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+            return [jy, jm, jd];
+        }
+    </script>
+</body>
+</html>
