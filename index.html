@@ -506,8 +506,8 @@
             gap: 10px;
         }
         
-        /* FIXED: Better visibility for dynamic item inputs */
-        .dynamic-item input {
+        /* FIXED: Better visibility for dynamic item inputs - Fixed for mobile */
+        .dynamic-item input[type="text"] {
             flex: 1;
             border: 1px solid rgba(102, 126, 234, 0.2);
             padding: 8px 12px !important;
@@ -516,6 +516,22 @@
             border-radius: 6px;
             font-size: 14px;
             font-family: inherit;
+            min-width: 60px; /* Minimum width for mobile */
+        }
+        
+        /* FIXED: Smaller input for points on mobile */
+        .dynamic-item input[type="number"] {
+            width: 70px !important; /* Reduced width for points */
+            min-width: 70px !important;
+            max-width: 70px !important;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            padding: 8px 10px !important;
+            background: white !important;
+            color: #2c3e50 !important;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            text-align: center;
         }
         
         .dynamic-item input:focus {
@@ -781,6 +797,54 @@
             margin-top: 20px;
         }
         
+        /* NEW: Attendance history section */
+        .attendance-history-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .attendance-history-session-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e3f2fd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .attendance-status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 6px 0;
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 6px;
+            border: 1px solid #e3f2fd;
+        }
+        
+        .attendance-status-present {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .attendance-status-absent {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .attendance-status-late {
+            color: #17a2b8;
+            font-weight: 600;
+        }
+        
+        .attendance-status-notes {
+            color: #20c997;
+            font-weight: 600;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -873,6 +937,36 @@
             .icon-label {
                 font-size: 9px;
             }
+            
+            /* FIXED: Mobile styles for dynamic items */
+            .dynamic-item {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .dynamic-item input[type="text"] {
+                flex: 1 1 100%;
+                min-width: 100%;
+                order: 1;
+            }
+            
+            .dynamic-item input[type="number"] {
+                width: 60px !important; /* Even smaller on mobile */
+                min-width: 60px !important;
+                max-width: 60px !important;
+                order: 2;
+                margin-left: auto;
+            }
+            
+            .dynamic-item button {
+                order: 3;
+                width: 100%;
+                margin-top: 5px;
+            }
+            
+            .attendance-history-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -890,6 +984,7 @@
                 <button class="tab" onclick="showTab('students')">دانشجویان</button>
                 <button class="tab" onclick="showTab('attendance')">حضور و غیاب</button>
                 <button class="tab" onclick="showTab('notes')">جزوه‌ها</button>
+                <button class="tab" onclick="showTab('attendanceHistory')">غیبت</button> <!-- NEW: Attendance History tab -->
                 <button class="tab" onclick="showTab('reports')">گزارشات</button>
             </div>
             
@@ -1005,6 +1100,18 @@
                     </select>
                 </div>
                 <div id="notesContent"></div>
+            </div>
+            
+            <!-- NEW: Attendance History Tab -->
+            <div id="attendanceHistory" class="tab-content">
+                <h2>تاریخچه حضور و غیاب (غیبت)</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="attendanceHistoryClass" onchange="renderAttendanceHistory()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
+                <div id="attendanceHistoryContent"></div>
             </div>
             
             <div id="reports" class="tab-content">
@@ -1276,6 +1383,7 @@
             renderStudents();
             renderAttendance();
             renderNotesManagement();
+            renderAttendanceHistory(); // NEW: Render attendance history
             renderStats();
             
             const today = new Date();
@@ -1350,6 +1458,8 @@
                 renderStats();
             } else if (tabName === 'notes') {
                 renderNotesManagement();
+            } else if (tabName === 'attendanceHistory') {
+                renderAttendanceHistory();
             }
         }
         
@@ -1487,6 +1597,7 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
+                renderAttendanceHistory(); // NEW
                 renderStats();
             }
         }
@@ -1497,7 +1608,8 @@
                 'studentClass',
                 'attendanceClass',
                 'reportClass',
-                'notesClass'
+                'notesClass',
+                'attendanceHistoryClass' // NEW: Add attendance history selector
             ];
             
             classSelectors.forEach(selectorId => {
@@ -1530,6 +1642,7 @@
             saveData();
             renderSessions();
             renderNotesManagement();
+            renderAttendanceHistory(); // NEW
             
             document.getElementById('sessionForm').reset();
             
@@ -1591,6 +1704,7 @@
                 renderSessions();
                 renderAttendance();
                 renderNotesManagement();
+                renderAttendanceHistory(); // NEW
                 renderStats();
             }
         }
@@ -1626,6 +1740,7 @@
             saveData();
             renderStudents();
             renderNotesManagement();
+            renderAttendanceHistory(); // NEW
             
             document.getElementById('studentForm').reset();
         }
@@ -1668,6 +1783,7 @@
             saveData();
             renderStudents();
             renderNotesManagement();
+            renderAttendanceHistory(); // NEW
             toggleBulkAdd();
             
             document.getElementById('bulkStudentNames').value = '';
@@ -1728,6 +1844,7 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
+                renderAttendanceHistory(); // NEW
                 renderStats();
             }
         }
@@ -1790,6 +1907,7 @@
                     renderStudents();
                     renderAttendance();
                     renderNotesManagement();
+                    renderAttendanceHistory(); // NEW
                     renderStats();
                     
                     alert('✓ تمام دانشجویان این کلاس با موفقیت حذف شدند');
@@ -1859,7 +1977,7 @@
                 bookItem.className = 'dynamic-item';
                 bookItem.innerHTML = `
                     <input type="text" placeholder="نام کتاب" value="${book.name}" onchange="updateBook(${index}, this.value)">
-                    <input type="number" placeholder="امتیاز" value="${book.points}" onchange="updateBookPoints(${index}, this.value)" style="width: 100px;">
+                    <input type="number" placeholder="امتیاز" value="${book.points}" onchange="updateBookPoints(${index}, this.value)">
                     <button type="button" onclick="removeBook(${index})" class="btn btn-danger">حذف</button>
                 `;
                 booksList.appendChild(bookItem);
@@ -1924,7 +2042,7 @@
                 movieItem.className = 'dynamic-item';
                 movieItem.innerHTML = `
                     <input type="text" placeholder="نام فیلم" value="${movie.name}" onchange="updateMovie(${index}, this.value)">
-                    <input type="number" placeholder="امتیاز" value="${movie.points}" onchange="updateMoviePoints(${index}, this.value)" style="width: 100px;">
+                    <input type="number" placeholder="امتیاز" value="${movie.points}" onchange="updateMoviePoints(${index}, this.value)">
                     <button type="button" onclick="removeMovie(${index})" class="btn btn-danger">حذف</button>
                 `;
                 moviesList.appendChild(movieItem);
@@ -1989,7 +2107,7 @@
                 seriesElement.className = 'dynamic-item';
                 seriesElement.innerHTML = `
                     <input type="text" placeholder="نام سریال" value="${seriesItem.name}" onchange="updateSeries(${index}, this.value)">
-                    <input type="number" placeholder="امتیاز" value="${seriesItem.points}" onchange="updateSeriesPoints(${index}, this.value)" style="width: 100px;">
+                    <input type="number" placeholder="امتیاز" value="${seriesItem.points}" onchange="updateSeriesPoints(${index}, this.value)">
                     <button type="button" onclick="removeSeries(${index})" class="btn btn-danger">حذف</button>
                 `;
                 seriesList.appendChild(seriesElement);
@@ -2090,7 +2208,7 @@
                 scoreItem.className = 'dynamic-item';
                 scoreItem.innerHTML = `
                     <input type="text" placeholder="عنوان امتیاز (مثلاً: ارائه پروژه)" value="${customScore.label || ''}" onchange="updateCustomScoreLabel(${index}, this.value)" style="flex: 2;">
-                    <input type="number" placeholder="امتیاز" value="${customScore.points || 0}" onchange="updateCustomScorePoints(${index}, this.value)" style="width: 100px;">
+                    <input type="number" placeholder="امتیاز" value="${customScore.points || 0}" onchange="updateCustomScorePoints(${index}, this.value)" style="width: 70px;">
                     <button type="button" onclick="removeCustomScore(${index})" class="btn btn-danger">حذف</button>
                 `;
                 customScoresContainer.appendChild(scoreItem);
@@ -2399,6 +2517,7 @@
             renderStudents();
             renderAttendanceList();
             renderStats();
+            renderAttendanceHistory(); // NEW
             closeModal('studentModal');
             alert('اطلاعات با موفقیت ذخیره شد');
         }
@@ -2644,6 +2763,7 @@
             saveData();
             renderStudents();
             renderStats();
+            renderAttendanceHistory(); // NEW
             alert('حضور و غیاب با موفقیت ذخیره شد و امتیازات به‌روز شدند');
         }
         
@@ -2748,6 +2868,124 @@
             }
             
             return totalScore;
+        }
+        
+        // NEW: تابع نمایش تاریخچه حضور و غیاب (غیبت)
+        function renderAttendanceHistory() {
+            const classId = document.getElementById('attendanceHistoryClass').value;
+            currentClassId = classId;
+            const attendanceHistoryContent = document.getElementById('attendanceHistoryContent');
+            
+            if (!classId) {
+                attendanceHistoryContent.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classSessions.length === 0) {
+                attendanceHistoryContent.innerHTML = '<div class="empty-state">ابتدا جلسه‌ای برای این کلاس ایجاد کنید</div>';
+                return;
+            }
+            
+            if (classStudents.length === 0) {
+                attendanceHistoryContent.innerHTML = '<div class="empty-state">ابتدا دانشجویی برای این کلاس اضافه کنید</div>';
+                return;
+            }
+            
+            // مرتب‌سازی دانشجویان به ترتیب الفبایی
+            let sortedStudents = sortStudentsAlphabetically([...classStudents]);
+            
+            let html = `
+                <h3 style="margin-bottom: 20px;">تاریخچه حضور و غیاب دانشجویان</h3>
+                <p style="margin-bottom: 15px; color: #666;">نمایش وضعیت حضور و غیاب هر دانشجو در تمام جلسات:</p>
+                <div class="attendance-history-grid">
+            `;
+            
+            sortedStudents.forEach(student => {
+                const studentAttendanceHistory = [];
+                let presentCount = 0;
+                let absentCount = 0;
+                let lateCount = 0;
+                let notesCount = 0;
+                
+                classSessions.forEach(session => {
+                    const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
+                    let status = 'غایب';
+                    let statusClass = 'attendance-status-absent';
+                    
+                    if (attendanceRecord) {
+                        if (typeof attendanceRecord === 'object') {
+                            if (attendanceRecord.present === true) {
+                                status = 'حاضر';
+                                statusClass = 'attendance-status-present';
+                                presentCount++;
+                                
+                                if (attendanceRecord.late) {
+                                    status += ' (تأخیر)';
+                                    statusClass = 'attendance-status-late';
+                                    lateCount++;
+                                }
+                                if (attendanceRecord.writesNotes) {
+                                    status += ' (جزوه)';
+                                    statusClass = 'attendance-status-notes';
+                                    notesCount++;
+                                }
+                            } else {
+                                status = 'غایب';
+                                statusClass = 'attendance-status-absent';
+                                absentCount++;
+                            }
+                        } else if (attendanceRecord === true) {
+                            status = 'حاضر';
+                            statusClass = 'attendance-status-present';
+                            presentCount++;
+                        } else {
+                            status = 'غایب';
+                            statusClass = 'attendance-status-absent';
+                            absentCount++;
+                        }
+                    } else {
+                        status = 'غایب';
+                        statusClass = 'attendance-status-absent';
+                        absentCount++;
+                    }
+                    
+                    studentAttendanceHistory.push({
+                        sessionTitle: session.title,
+                        sessionDate: session.date,
+                        status: status,
+                        statusClass: statusClass
+                    });
+                });
+                
+                const totalSessions = classSessions.length;
+                const attendancePercentage = totalSessions > 0 ? ((presentCount / totalSessions) * 100).toFixed(1) : 0;
+                
+                html += `
+                    <div class="notes-item">
+                        <div class="notes-header">
+                            <div class="notes-title">${student.name}</div>
+                            <button onclick="editStudent(${student.id})" class="btn btn-primary">ویرایش</button>
+                        </div>
+                        <p><strong>امتیاز کل:</strong> <span class="score-badge">${calculateStudentScore(student.id).toFixed(2)}</span></p>
+                        <p><strong>وضعیت حضور:</strong> ${presentCount} حاضر، ${absentCount} غایب، ${lateCount} تأخیر، ${notesCount} جزوه</p>
+                        <p><strong>درصد حضور:</strong> ${attendancePercentage}%</p>
+                        <div class="attendance-history-session-list">
+                            ${studentAttendanceHistory.map(item => `
+                                <div class="attendance-status-item">
+                                    <span>${item.sessionTitle} (${item.sessionDate})</span>
+                                    <span class="${item.statusClass}">${item.status}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            attendanceHistoryContent.innerHTML = html;
         }
         
         // 🔥 تابع آمار و گزارشات - نسخه اصلاحی
@@ -3257,6 +3495,7 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
+                renderAttendanceHistory(); // NEW
                 renderStats();
                 
                 closeModal('importModal');
@@ -3541,6 +3780,7 @@
                     renderStudents();
                     renderAttendance();
                     renderNotesManagement();
+                    renderAttendanceHistory(); // NEW
                     renderStats();
                     
                     closeModal('excelImportModal');
@@ -3571,6 +3811,7 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
+                renderAttendanceHistory(); // NEW
                 renderStats();
                 
                 alert('✓ همه اطلاعات با موفقیت بازنشانی شدند');
