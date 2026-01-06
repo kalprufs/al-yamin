@@ -845,6 +845,11 @@
             font-weight: 600;
         }
         
+        .attendance-status-voice {
+            color: #ffc107;
+            font-weight: 600;
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -984,7 +989,8 @@
                 <button class="tab" onclick="showTab('students')">دانشجویان</button>
                 <button class="tab" onclick="showTab('attendance')">حضور و غیاب</button>
                 <button class="tab" onclick="showTab('notes')">جزوه‌ها</button>
-                <button class="tab" onclick="showTab('attendanceHistory')">غیبت</button> <!-- NEW: Attendance History tab -->
+                <button class="tab" onclick="showTab('voices')">صوت‌ها</button> <!-- NEW: Voice tab -->
+                <button class="tab" onclick="showTab('attendanceHistory')">غیبت</button>
                 <button class="tab" onclick="showTab('reports')">گزارشات</button>
             </div>
             
@@ -1090,7 +1096,7 @@
                 <div id="attendanceContent"></div>
             </div>
             
-            <!-- تب جدید برای مدیریت جزوه‌ها -->
+            <!-- تب مدیریت جزوه‌ها -->
             <div id="notes" class="tab-content">
                 <h2>مدیریت جزوه‌ها</h2>
                 <div class="class-selector">
@@ -1102,7 +1108,18 @@
                 <div id="notesContent"></div>
             </div>
             
-            <!-- NEW: Attendance History Tab -->
+            <!-- NEW: تب مدیریت صوت‌ها -->
+            <div id="voices" class="tab-content">
+                <h2>مدیریت صوت‌ها</h2>
+                <div class="class-selector">
+                    <label>انتخاب کلاس:</label>
+                    <select id="voicesClass" onchange="renderVoicesManagement()">
+                        <option value="">-- انتخاب کنید --</option>
+                    </select>
+                </div>
+                <div id="voicesContent"></div>
+            </div>
+            
             <div id="attendanceHistory" class="tab-content">
                 <h2>تاریخچه حضور و غیاب (غیبت)</h2>
                 <div class="class-selector">
@@ -1353,7 +1370,9 @@
             movie: 1,
             shortBook: 3,
             lateArrival: -0.25, // امتیاز جدید برای تأخیر
-            writesNotesInClass: 0.25 // امتیاز جدید برای نوشتن جزوه در کلاس
+            writesNotesInClass: 0.25, // امتیاز جدید برای نوشتن جزوه در کلاس
+            hasNotes: 0.25, // امتیاز برای داشتن جزوه (از تب مدیریت جزوه‌ها)
+            hasVoice: 0.25 // امتیاز جدید برای داشتن صوت
         };
 
         let classes = [];
@@ -1364,7 +1383,8 @@
         let currentSessionId = null;
         let currentClassId = null;
         let studentNotes = {}; // ذخیره جزوه‌های دانشجویان
-        let attendanceSearchQuery = ''; // NEW: برای جستجوی دانشجویان در حضور و غیاب
+        let studentVoices = {}; // NEW: ذخیره صوت‌های دانشجویان
+        let attendanceSearchQuery = ''; // برای جستجوی دانشجویان در حضور و غیاب
         
         // تابع برای مرتب‌سازی دانشجویان به ترتیب الفبایی فارسی
         function sortStudentsAlphabetically(studentsList) {
@@ -1383,7 +1403,8 @@
             renderStudents();
             renderAttendance();
             renderNotesManagement();
-            renderAttendanceHistory(); // NEW: Render attendance history
+            renderVoicesManagement(); // NEW
+            renderAttendanceHistory();
             renderStats();
             
             const today = new Date();
@@ -1458,6 +1479,8 @@
                 renderStats();
             } else if (tabName === 'notes') {
                 renderNotesManagement();
+            } else if (tabName === 'voices') { // NEW
+                renderVoicesManagement();
             } else if (tabName === 'attendanceHistory') {
                 renderAttendanceHistory();
             }
@@ -1590,6 +1613,14 @@
                     }
                 });
                 
+                // NEW: Remove student voices for this class
+                Object.keys(studentVoices).forEach(studentId => {
+                    const student = students.find(s => s.id == studentId);
+                    if (!student || student.classId === id) {
+                        delete studentVoices[studentId];
+                    }
+                });
+                
                 saveData();
                 renderClasses();
                 renderClassSelectors();
@@ -1597,7 +1628,8 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
-                renderAttendanceHistory(); // NEW
+                renderVoicesManagement(); // NEW
+                renderAttendanceHistory();
                 renderStats();
             }
         }
@@ -1609,7 +1641,8 @@
                 'attendanceClass',
                 'reportClass',
                 'notesClass',
-                'attendanceHistoryClass' // NEW: Add attendance history selector
+                'voicesClass', // NEW
+                'attendanceHistoryClass'
             ];
             
             classSelectors.forEach(selectorId => {
@@ -1642,7 +1675,8 @@
             saveData();
             renderSessions();
             renderNotesManagement();
-            renderAttendanceHistory(); // NEW
+            renderVoicesManagement(); // NEW
+            renderAttendanceHistory();
             
             document.getElementById('sessionForm').reset();
             
@@ -1700,11 +1734,18 @@
                         delete studentNotes[studentId][id];
                     }
                 });
+                // NEW: حذف صوت‌های مربوط به این جلسه
+                Object.keys(studentVoices).forEach(studentId => {
+                    if (studentVoices[studentId] && studentVoices[studentId][id]) {
+                        delete studentVoices[studentId][id];
+                    }
+                });
                 saveData();
                 renderSessions();
                 renderAttendance();
                 renderNotesManagement();
-                renderAttendanceHistory(); // NEW
+                renderVoicesManagement(); // NEW
+                renderAttendanceHistory();
                 renderStats();
             }
         }
@@ -1740,7 +1781,8 @@
             saveData();
             renderStudents();
             renderNotesManagement();
-            renderAttendanceHistory(); // NEW
+            renderVoicesManagement(); // NEW
+            renderAttendanceHistory();
             
             document.getElementById('studentForm').reset();
         }
@@ -1783,7 +1825,8 @@
             saveData();
             renderStudents();
             renderNotesManagement();
-            renderAttendanceHistory(); // NEW
+            renderVoicesManagement(); // NEW
+            renderAttendanceHistory();
             toggleBulkAdd();
             
             document.getElementById('bulkStudentNames').value = '';
@@ -1833,6 +1876,7 @@
                 students = students.filter(student => student.id !== id);
                 delete studentDetails[id];
                 delete studentNotes[id];
+                delete studentVoices[id]; // NEW
                 
                 Object.keys(attendance).forEach(sessionId => {
                     if (attendance[sessionId][id]) {
@@ -1844,7 +1888,8 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
-                renderAttendanceHistory(); // NEW
+                renderVoicesManagement(); // NEW
+                renderAttendanceHistory();
                 renderStats();
             }
         }
@@ -1888,6 +1933,14 @@
                         }
                     });
                     
+                    // NEW: Remove student voices for students in this class
+                    Object.keys(studentVoices).forEach(studentId => {
+                        const student = students.find(s => s.id == studentId);
+                        if (!student) {
+                            delete studentVoices[studentId];
+                        }
+                    });
+                    
                     // Remove attendance records for students in this class
                     Object.keys(attendance).forEach(sessionId => {
                         const session = sessions.find(s => s.id == sessionId);
@@ -1907,7 +1960,8 @@
                     renderStudents();
                     renderAttendance();
                     renderNotesManagement();
-                    renderAttendanceHistory(); // NEW
+                    renderVoicesManagement(); // NEW
+                    renderAttendanceHistory();
                     renderStats();
                     
                     alert('✓ تمام دانشجویان این کلاس با موفقیت حذف شدند');
@@ -2517,7 +2571,7 @@
             renderStudents();
             renderAttendanceList();
             renderStats();
-            renderAttendanceHistory(); // NEW
+            renderAttendanceHistory();
             closeModal('studentModal');
             alert('اطلاعات با موفقیت ذخیره شد');
         }
@@ -2763,11 +2817,11 @@
             saveData();
             renderStudents();
             renderStats();
-            renderAttendanceHistory(); // NEW
+            renderAttendanceHistory();
             alert('حضور و غیاب با موفقیت ذخیره شد و امتیازات به‌روز شدند');
         }
         
-        // 🔥 تابع محاسبه امتیاز دانشجو - نسخه اصلاحی با اضافه شدن تأخیر و نوشتن جزوه
+        // 🔥 تابع محاسبه امتیاز دانشجو - نسخه اصلاحی با اضافه شدن تأخیر و نوشتن جزوه و صوت
         function calculateStudentScore(studentId) {
             let totalScore = 0;
             const student = students.find(s => s.id === studentId);
@@ -2789,7 +2843,7 @@
                             if (attendanceRecord.late) {
                                 totalScore += scoreConfig.lateArrival; // -0.25
                             }
-                            // بررسی نوشتن جزوه
+                            // بررسی نوشتن جزوه در کلاس
                             if (attendanceRecord.writesNotes) {
                                 totalScore += scoreConfig.writesNotesInClass; // +0.25
                             }
@@ -2810,6 +2864,26 @@
                     totalScore += scoreConfig.absent; // -1
                 }
             });
+            
+            // 🔥 محاسبه امتیاز جزوه‌ها (از تب مدیریت جزوه‌ها)
+            if (studentNotes[studentId]) {
+                const allClassSessions = sessions.filter(s => s.classId === student.classId);
+                allClassSessions.forEach(session => {
+                    if (studentNotes[studentId][session.id]) {
+                        totalScore += scoreConfig.hasNotes; // +0.25 برای هر جلسه با جزوه
+                    }
+                });
+            }
+            
+            // 🔥 NEW: محاسبه امتیاز صوت‌ها (از تب مدیریت صوت‌ها)
+            if (studentVoices[studentId]) {
+                const allClassSessions = sessions.filter(s => s.classId === student.classId);
+                allClassSessions.forEach(session => {
+                    if (studentVoices[studentId][session.id]) {
+                        totalScore += scoreConfig.hasVoice; // +0.25 برای هر جلسه با صوت
+                    }
+                });
+            }
             
             // امتیازات مثبت (کتاب، فیلم، وضعیت شخصی، etc.)
             if (studentDetail.isMarried) {
@@ -2909,6 +2983,7 @@
                 let absentCount = 0;
                 let lateCount = 0;
                 let notesCount = 0;
+                let voiceCount = 0;
                 
                 classSessions.forEach(session => {
                     const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
@@ -2928,7 +3003,7 @@
                                     lateCount++;
                                 }
                                 if (attendanceRecord.writesNotes) {
-                                    status += ' (جزوه)';
+                                    status += ' (جزوه کلاس)';
                                     statusClass = 'attendance-status-notes';
                                     notesCount++;
                                 }
@@ -2952,6 +3027,30 @@
                         absentCount++;
                     }
                     
+                    // بررسی جزوه از تب مدیریت
+                    if (studentNotes[student.id] && studentNotes[student.id][session.id]) {
+                        if (status === 'حاضر') {
+                            status += ' + جزوه';
+                        } else {
+                            status = 'جزوه ثبت شده';
+                            statusClass = 'attendance-status-notes';
+                        }
+                        notesCount++;
+                    }
+                    
+                    // NEW: بررسی صوت از تب مدیریت
+                    if (studentVoices[student.id] && studentVoices[student.id][session.id]) {
+                        if (status === 'حاضر' || status.includes('حاضر')) {
+                            status += ' + صوت';
+                        } else if (status === 'جزوه ثبت شده') {
+                            status = 'جزوه + صوت ثبت شده';
+                        } else {
+                            status = 'صوت ثبت شده';
+                            statusClass = 'attendance-status-voice';
+                        }
+                        voiceCount++;
+                    }
+                    
                     studentAttendanceHistory.push({
                         sessionTitle: session.title,
                         sessionDate: session.date,
@@ -2970,7 +3069,8 @@
                             <button onclick="editStudent(${student.id})" class="btn btn-primary">ویرایش</button>
                         </div>
                         <p><strong>امتیاز کل:</strong> <span class="score-badge">${calculateStudentScore(student.id).toFixed(2)}</span></p>
-                        <p><strong>وضعیت حضور:</strong> ${presentCount} حاضر، ${absentCount} غایب، ${lateCount} تأخیر، ${notesCount} جزوه</p>
+                        <p><strong>وضعیت حضور:</strong> ${presentCount} حاضر، ${absentCount} غایب، ${lateCount} تأخیر</p>
+                        <p><strong>جزوه:</strong> ${notesCount} جلسه | <strong>صوت:</strong> ${voiceCount} جلسه</p>
                         <p><strong>درصد حضور:</strong> ${attendancePercentage}%</p>
                         <div class="attendance-history-session-list">
                             ${studentAttendanceHistory.map(item => `
@@ -3139,6 +3239,78 @@
             notesContent.innerHTML = html;
         }
         
+        // NEW: تابع مدیریت صوت‌ها (مشابه جزوه‌ها)
+        function renderVoicesManagement() {
+            const classId = document.getElementById('voicesClass').value;
+            currentClassId = classId;
+            const voicesContent = document.getElementById('voicesContent');
+            
+            if (!classId) {
+                voicesContent.innerHTML = '<div class="empty-state">لطفاً یک کلاس انتخاب کنید</div>';
+                return;
+            }
+            
+            const classSessions = sessions.filter(session => session.classId == classId);
+            const classStudents = students.filter(student => student.classId == classId);
+            
+            if (classSessions.length === 0) {
+                voicesContent.innerHTML = '<div class="empty-state">ابتدا جلسه‌ای برای این کلاس ایجاد کنید</div>';
+                return;
+            }
+            
+            if (classStudents.length === 0) {
+                voicesContent.innerHTML = '<div class="empty-state">ابتدا دانشجویی برای این کلاس اضافه کنید</div>';
+                return;
+            }
+            
+            // مرتب‌سازی دانشجویان به ترتیب الفبایی
+            let sortedStudents = sortStudentsAlphabetically([...classStudents]);
+            
+            let html = `
+                <h3 style="margin-bottom: 20px;">مدیریت صوت‌های دانشجویان</h3>
+                <p style="margin-bottom: 15px; color: #666;">برای هر دانشجو، جلساتی که صوت داشته را انتخاب کنید:</p>
+                <div class="notes-grid">
+            `;
+            
+            sortedStudents.forEach(student => {
+                if (!studentVoices[student.id]) {
+                    studentVoices[student.id] = {};
+                }
+                
+                const studentSessionsWithVoices = [];
+                classSessions.forEach(session => {
+                    if (studentVoices[student.id][session.id]) {
+                        studentSessionsWithVoices.push({
+                            id: session.id,
+                            title: session.title,
+                            date: session.date
+                        });
+                    }
+                });
+                
+                html += `
+                    <div class="notes-item">
+                        <div class="notes-header">
+                            <div class="notes-title">${student.name}</div>
+                            <button onclick="openVoicesModal(${student.id})" class="btn btn-warning">ویرایش صوت‌ها</button>
+                        </div>
+                        <p><strong>تعداد جلسات با صوت:</strong> ${studentSessionsWithVoices.length} از ${classSessions.length}</p>
+                        <div class="notes-session-list">
+                            ${studentSessionsWithVoices.length > 0 ? 
+                                studentSessionsWithVoices.map(session => 
+                                    `<div>${session.title} (${session.date})</div>`
+                                ).join('') : 
+                                '<div style="color: #999; font-style: italic;">هیچ جلسه‌ای با صوت ثبت نشده است</div>'
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            voicesContent.innerHTML = html;
+        }
+        
         // تابع جدید: باز کردن مودال ویرایش جزوه‌ها برای یک دانشجو
         function openNotesModal(studentId) {
             const student = students.find(s => s.id === studentId);
@@ -3186,6 +3358,53 @@
             document.body.appendChild(modalContainer);
         }
         
+        // NEW: تابع باز کردن مودال ویرایش صوت‌ها برای یک دانشجو
+        function openVoicesModal(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (!student) return;
+            
+            const classSessions = sessions.filter(session => session.classId == student.classId);
+            
+            let modalHtml = `
+                <div id="voicesModal" class="modal" style="display: block;">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeModal('voicesModal')">&times;</span>
+                        <h2>مدیریت صوت‌های ${student.name}</h2>
+                        <p style="margin-bottom: 20px; color: #666;">جلساتی که دانشجو صوت داشته را انتخاب کنید:</p>
+                        <div id="voicesSessionsList" style="max-height: 400px; overflow-y: auto;">
+            `;
+            
+            if (!studentVoices[studentId]) {
+                studentVoices[studentId] = {};
+            }
+            
+            classSessions.forEach(session => {
+                const hasVoice = studentVoices[studentId][session.id] || false;
+                modalHtml += `
+                    <div class="session-checkbox-item">
+                        <label>${session.title} (${session.date})</label>
+                        <input type="checkbox" id="voice_session_${session.id}" ${hasVoice ? 'checked' : ''} 
+                               onchange="updateStudentVoices(${studentId}, ${session.id}, this.checked)">
+                    </div>
+                `;
+            });
+            
+            modalHtml += `
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <button onclick="saveAllVoices(${studentId})" class="btn btn-success">ذخیره تمام صوت‌ها</button>
+                            <button onclick="closeModal('voicesModal')" class="btn btn-danger">انصراف</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // اضافه کردن مودال به صفحه
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHtml;
+            document.body.appendChild(modalContainer);
+        }
+        
         // تابع جدید: به‌روزرسانی وضعیت جزوه برای یک جلسه خاص
         function updateStudentNotes(studentId, sessionId, hasNotes) {
             if (!studentNotes[studentId]) {
@@ -3194,12 +3413,32 @@
             studentNotes[studentId][sessionId] = hasNotes;
         }
         
+        // NEW: تابع به‌روزرسانی وضعیت صوت برای یک جلسه خاص
+        function updateStudentVoices(studentId, sessionId, hasVoice) {
+            if (!studentVoices[studentId]) {
+                studentVoices[studentId] = {};
+            }
+            studentVoices[studentId][sessionId] = hasVoice;
+        }
+        
         // تابع جدید: ذخیره تمام جزوه‌ها برای یک دانشجو
         function saveAllNotes(studentId) {
             saveData();
             renderNotesManagement();
+            renderAttendanceHistory();
+            renderStats();
             closeModal('notesModal');
             alert('جزوه‌ها با موفقیت ذخیره شدند');
+        }
+        
+        // NEW: تابع ذخیره تمام صوت‌ها برای یک دانشجو
+        function saveAllVoices(studentId) {
+            saveData();
+            renderVoicesManagement();
+            renderAttendanceHistory();
+            renderStats();
+            closeModal('voicesModal');
+            alert('صوت‌ها با موفقیت ذخیره شدند');
         }
         
         function exportToExcel() {
@@ -3271,7 +3510,7 @@
                 const allClassSessions = sessions.filter(s => s.classId === student.classId);
                 let absenceScore = 0;
                 let lateScore = 0;
-                let notesScore = 0;
+                let notesInClassScore = 0;
                 
                 allClassSessions.forEach(session => {
                     const attendanceRecord = attendance[session.id] && attendance[session.id][student.id];
@@ -3285,7 +3524,7 @@
                                 lateScore += scoreConfig.lateArrival;
                             }
                             if (attendanceRecord.writesNotes) {
-                                notesScore += scoreConfig.writesNotesInClass;
+                                notesInClassScore += scoreConfig.writesNotesInClass;
                             }
                         } else if (attendanceRecord === false) {
                             absenceScore += scoreConfig.absent;
@@ -3295,11 +3534,30 @@
                     }
                 });
                 
-                // محاسبه تعداد جلسات با جزوه
+                // محاسبه تعداد جلسات با جزوه (از تب مدیریت)
                 let notesCount = 0;
+                let notesScore = 0;
                 if (studentNotes[student.id]) {
                     const allSessions = sessions.filter(s => s.classId === student.classId);
-                    notesCount = allSessions.filter(session => studentNotes[student.id][session.id]).length;
+                    allSessions.forEach(session => {
+                        if (studentNotes[student.id][session.id]) {
+                            notesCount++;
+                            notesScore += scoreConfig.hasNotes;
+                        }
+                    });
+                }
+                
+                // NEW: محاسبه تعداد جلسات با صوت (از تب مدیریت)
+                let voiceCount = 0;
+                let voiceScore = 0;
+                if (studentVoices[student.id]) {
+                    const allSessions = sessions.filter(s => s.classId === student.classId);
+                    allSessions.forEach(session => {
+                        if (studentVoices[student.id][session.id]) {
+                            voiceCount++;
+                            voiceScore += scoreConfig.hasVoice;
+                        }
+                    });
                 }
                 
                 return {
@@ -3321,8 +3579,11 @@
                     'امتیاز جلسات': sessionScoresTotal,
                     'امتیاز غیبت': absenceScore,
                     'امتیاز تأخیر': lateScore,
-                    'امتیاز جزوه': notesScore,
+                    'امتیاز جزوه در کلاس': notesInClassScore,
                     'تعداد جلسات با جزوه': notesCount,
+                    'امتیاز جزوه': notesScore,
+                    'تعداد جلسات با صوت': voiceCount,
+                    'امتیاز صوت': voiceScore,
                     'امتیاز کل': totalScore
                 };
             });
@@ -3350,10 +3611,28 @@
                                 if (attendanceRecord.present === true) {
                                     status = 'حاضر';
                                     if (attendanceRecord.late) status += ' (تأخیر)';
-                                    if (attendanceRecord.writesNotes) status += ' (جزوه)';
+                                    if (attendanceRecord.writesNotes) status += ' (جزوه کلاس)';
                                 }
                             } else if (attendanceRecord === true) {
                                 status = 'حاضر';
+                            }
+                        }
+                        
+                        // اضافه کردن جزوه از تب مدیریت
+                        if (studentNotes[student.id] && studentNotes[student.id][session.id]) {
+                            if (status === 'حاضر') {
+                                status += ' + جزوه ثبت شده';
+                            } else {
+                                status = 'جزوه ثبت شده';
+                            }
+                        }
+                        
+                        // NEW: اضافه کردن صوت از تب مدیریت
+                        if (studentVoices[student.id] && studentVoices[student.id][session.id]) {
+                            if (status.includes('حاضر') || status.includes('جزوه')) {
+                                status += ' + صوت ثبت شده';
+                            } else {
+                                status = 'صوت ثبت شده';
                             }
                         }
                         
@@ -3395,6 +3674,34 @@
                 XLSX.utils.book_append_sheet(wb, ws3, 'جزوه‌ها');
             }
             
+            // NEW: برگه صوت‌ها
+            const voicesData = [];
+            classStudents.forEach(student => {
+                const row = {
+                    'نام دانشجو': student.name,
+                    'کد دانشجویی': (studentDetails[student.id] || {}).studentCode || ''
+                };
+                
+                const studentVoiceSessions = [];
+                if (studentVoices[student.id]) {
+                    classSessions.forEach(session => {
+                        if (studentVoices[student.id][session.id]) {
+                            studentVoiceSessions.push(`${session.title} (${session.date})`);
+                        }
+                    });
+                }
+                
+                row['جلسات با صوت'] = studentVoiceSessions.join('، ');
+                row['تعداد جلسات با صوت'] = studentVoiceSessions.length;
+                
+                voicesData.push(row);
+            });
+            
+            if (voicesData.length > 0) {
+                const ws4 = XLSX.utils.json_to_sheet(voicesData);
+                XLSX.utils.book_append_sheet(wb, ws4, 'صوت‌ها');
+            }
+            
             XLSX.writeFile(wb, `استادیار_گزارش_${className}.xlsx`);
         }
         
@@ -3407,8 +3714,9 @@
                 attendance,
                 studentDetails,
                 studentNotes,
+                studentVoices, // NEW: اضافه کردن صوت‌ها به خروجی JSON
                 exportDate: new Date().toISOString(),
-                version: '1.1'
+                version: '1.2' // NEW: افزایش نسخه به دلیل اضافه شدن صوت‌ها
             };
             
             document.getElementById('jsonOutput').value = JSON.stringify(data, null, 2);
@@ -3422,8 +3730,9 @@
                 attendance,
                 studentDetails,
                 studentNotes,
+                studentVoices, // NEW: اضافه کردن صوت‌ها به خروجی JSON
                 exportDate: new Date().toISOString(),
-                version: '1.1'
+                version: '1.2' // NEW: افزایش نسخه به دلیل اضافه شدن صوت‌ها
             };
             
             const dataStr = JSON.stringify(data, null, 2);
@@ -3467,6 +3776,7 @@
                     attendance = importedData.attendance;
                     studentDetails = importedData.studentDetails;
                     studentNotes = importedData.studentNotes || {};
+                    studentVoices = importedData.studentVoices || {}; // NEW: وارد کردن صوت‌ها
                 } else {
                     // ادغام اطلاعات
                     classes = [...classes, ...importedData.classes];
@@ -3486,6 +3796,9 @@
                     
                     // ادغام studentNotes
                     Object.assign(studentNotes, importedData.studentNotes || {});
+                    
+                    // NEW: ادغام studentVoices
+                    Object.assign(studentVoices, importedData.studentVoices || {});
                 }
                 
                 saveData();
@@ -3495,7 +3808,8 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
-                renderAttendanceHistory(); // NEW
+                renderVoicesManagement(); // NEW
+                renderAttendanceHistory();
                 renderStats();
                 
                 closeModal('importModal');
@@ -3593,6 +3907,7 @@
                         attendance = {};
                         studentDetails = {};
                         studentNotes = {};
+                        studentVoices = {}; // NEW
                     }
                     
                     // ایجاد یک کلاس پیش‌فرض اگر هیچ کلاسی وجود ندارد
@@ -3690,11 +4005,6 @@
                                 })).filter(series => series.name && series.name.trim() !== '');
                             }
                             
-                            // پردازش جزوه‌ها
-                            if (excelStudent['تعداد جلسات با جزوه'] && parseInt(excelStudent['تعداد جلسات با جزوه']) > 0) {
-                                // این قسمت نیاز به منطق پیچیده‌تری دارد که بستگی به ساختار داده دارد
-                            }
-                            
                             console.log('دانشجو پردازش شد:', student.name);
                         });
                     }
@@ -3780,7 +4090,8 @@
                     renderStudents();
                     renderAttendance();
                     renderNotesManagement();
-                    renderAttendanceHistory(); // NEW
+                    renderVoicesManagement(); // NEW
+                    renderAttendanceHistory();
                     renderStats();
                     
                     closeModal('excelImportModal');
@@ -3803,6 +4114,7 @@
                 attendance = {};
                 studentDetails = {};
                 studentNotes = {};
+                studentVoices = {}; // NEW
                 
                 saveData();
                 renderClasses();
@@ -3811,7 +4123,8 @@
                 renderStudents();
                 renderAttendance();
                 renderNotesManagement();
-                renderAttendanceHistory(); // NEW
+                renderVoicesManagement(); // NEW
+                renderAttendanceHistory();
                 renderStats();
                 
                 alert('✓ همه اطلاعات با موفقیت بازنشانی شدند');
@@ -3825,7 +4138,8 @@
                 students,
                 attendance,
                 studentDetails,
-                studentNotes
+                studentNotes,
+                studentVoices // NEW: ذخیره صوت‌ها
             };
             
             localStorage.setItem('استادیار', JSON.stringify(data));
@@ -3841,6 +4155,7 @@
                 attendance = data.attendance || {};
                 studentDetails = data.studentDetails || {};
                 studentNotes = data.studentNotes || {};
+                studentVoices = data.studentVoices || {}; // NEW: بارگذاری صوت‌ها
             }
         }
         
